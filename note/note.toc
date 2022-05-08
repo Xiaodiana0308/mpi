@@ -1,0 +1,90 @@
+\contentsline {section}{\numberline {1}矩阵乘并行计算}{4}{section.1}%
+\contentsline {subsection}{\numberline {1.1}矩阵基本性质}{4}{subsection.1.1}%
+\contentsline {subsubsection}{\numberline {1.1.1}加法}{4}{subsubsection.1.1.1}%
+\contentsline {subsubsection}{\numberline {1.1.2}数乘}{4}{subsubsection.1.1.2}%
+\contentsline {subsubsection}{\numberline {1.1.3}乘法}{4}{subsubsection.1.1.3}%
+\contentsline {subsubsection}{\numberline {1.1.4}转置}{4}{subsubsection.1.1.4}%
+\contentsline {subsubsection}{\numberline {1.1.5}共轭}{4}{subsubsection.1.1.5}%
+\contentsline {subsubsection}{\numberline {1.1.6}注意}{4}{subsubsection.1.1.6}%
+\contentsline {subsubsection}{\numberline {1.1.7}相关定义}{5}{subsubsection.1.1.7}%
+\contentsline {subsubsection}{\numberline {1.1.8}初等变换}{5}{subsubsection.1.1.8}%
+\contentsline {subsection}{\numberline {1.2}传分块统方法}{6}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Cannon方法}{6}{subsection.1.3}%
+\contentsline {section}{\numberline {2}线性方程组的并行求解}{6}{section.2}%
+\contentsline {subsection}{\numberline {2.1}直接求解法}{6}{subsection.2.1}%
+\contentsline {subsubsection}{\numberline {2.1.1}LU分解算法}{6}{subsubsection.2.1.1}%
+\contentsline {paragraph}{置换矩阵P：}{7}{section*.2}%
+\contentsline {subsubsection}{\numberline {2.1.2}Gauss直接消去}{7}{subsubsection.2.1.2}%
+\contentsline {paragraph}{列主元Gauss消去方法：}{8}{section*.3}%
+\contentsline {subsubsection}{\numberline {2.1.3}Gauss消去并行计算方法}{8}{subsubsection.2.1.3}%
+\contentsline {paragraph}{三角矩阵的并行求解：}{9}{section*.4}%
+\contentsline {subsection}{\numberline {2.2}迭代解法}{10}{subsection.2.2}%
+\contentsline {section}{\numberline {3}FFT并行算法}{11}{section.3}%
+\contentsline {subsection}{\numberline {3.1}复数基本知识}{11}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}快速傅氏变换FFT原理}{11}{subsection.3.2}%
+\contentsline {subsubsection}{\numberline {3.2.1}物理意义}{11}{subsubsection.3.2.1}%
+\contentsline {paragraph}{傅里叶变换：}{11}{section*.5}%
+\contentsline {paragraph}{快速傅氏变换：}{11}{section*.6}%
+\contentsline {subsubsection}{\numberline {3.2.2}DFT}{12}{subsubsection.3.2.2}%
+\contentsline {subsubsection}{\numberline {3.2.3}FFT}{13}{subsubsection.3.2.3}%
+\contentsline {subsection}{\numberline {3.3}多项式乘法与FFT}{15}{subsection.3.3}%
+\contentsline {subsubsection}{\numberline {3.3.1}多项式的表示方法}{15}{subsubsection.3.3.1}%
+\contentsline {subsubsection}{\numberline {3.3.2}点值表示法与FTT关系}{15}{subsubsection.3.3.2}%
+\contentsline {subsubsection}{\numberline {3.3.3}FFT加速DFT}{15}{subsubsection.3.3.3}%
+\contentsline {paragraph}{基本FFT实现：}{15}{section*.7}%
+\contentsline {paragraph}{高效FFT实现：}{17}{section*.8}%
+\contentsline {subsubsection}{\numberline {3.3.4}FFT加速IDFT}{19}{subsubsection.3.3.4}%
+\contentsline {subsection}{\numberline {3.4}二维串行FFT算法}{20}{subsection.3.4}%
+\contentsline {section}{\numberline {4}MPI并行程序设计基础}{20}{section.4}%
+\contentsline {paragraph}{与pthread区别}{20}{section*.9}%
+\contentsline {subsection}{\numberline {4.1}并行相关分类}{21}{subsection.4.1}%
+\contentsline {paragraph}{计算机架构：}{21}{section*.10}%
+\contentsline {paragraph}{并行计算机系统结构编程模型(Flynn分类法)：}{21}{section*.11}%
+\contentsline {paragraph}{并行程序类型：}{22}{section*.12}%
+\contentsline {subsection}{\numberline {4.2}并行程序基本结构}{23}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}MPI数据类型}{23}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}MPI通信子(通信域)基础}{23}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.5}进程通信原理}{24}{subsection.4.5}%
+\contentsline {subsection}{\numberline {4.6}MPI基本函数}{24}{subsection.4.6}%
+\contentsline {subsubsection}{\numberline {4.6.1}并行环境管理函数}{24}{subsubsection.4.6.1}%
+\contentsline {paragraph}{MPI\_Init(\&argc, \&argv)}{24}{section*.13}%
+\contentsline {paragraph}{MPI\_Finalize()}{25}{section*.14}%
+\contentsline {subsubsection}{\numberline {4.6.2}MPI通信子操作函数}{25}{subsubsection.4.6.2}%
+\contentsline {paragraph}{MPI\_Comm\_rank函数}{25}{section*.15}%
+\contentsline {paragraph}{MPI\_Comm\_size函数}{25}{section*.16}%
+\contentsline {paragraph}{MPI\_Comm\_dup函数}{26}{section*.17}%
+\contentsline {paragraph}{MPI\_Comm\_compare函数}{26}{section*.18}%
+\contentsline {paragraph}{MPI\_Comm\_create函数}{26}{section*.19}%
+\contentsline {paragraph}{MPI\_Comm\_split函数}{27}{section*.20}%
+\contentsline {paragraph}{MPI\_Comm\_free函数}{27}{section*.21}%
+\contentsline {section}{\numberline {5}点到点通信函数}{28}{section.5}%
+\contentsline {subsection}{\numberline {5.1}阻塞式}{28}{subsection.5.1}%
+\contentsline {subsubsection}{\numberline {5.1.1}MPI\_Send函数}{28}{subsubsection.5.1.1}%
+\contentsline {subsubsection}{\numberline {5.1.2}MPI\_Recv函数}{28}{subsubsection.5.1.2}%
+\contentsline {paragraph}{函数成功接受的必要条件}{29}{section*.22}%
+\contentsline {subsubsection}{\numberline {5.1.3}MPI\_Sendrecv合成函数}{29}{subsubsection.5.1.3}%
+\contentsline {subsubsection}{\numberline {5.1.4}MPI\_Sendrecv\_Replace合成函数}{30}{subsubsection.5.1.4}%
+\contentsline {subsubsection}{\numberline {5.1.5}消息查询函数MPI\_Probe}{31}{subsubsection.5.1.5}%
+\contentsline {subsubsection}{\numberline {5.1.6}消息查询函数MPI\_IProbe}{31}{subsubsection.5.1.6}%
+\contentsline {subsubsection}{\numberline {5.1.7}消息查询函数MPI\_Get\_Counte}{32}{subsubsection.5.1.7}%
+\contentsline {subsection}{\numberline {5.2}非阻塞式}{32}{subsection.5.2}%
+\contentsline {paragraph}{非阻塞式(异步通信)与阻塞式(同步通信)区别}{32}{section*.23}%
+\contentsline {subsubsection}{\numberline {5.2.1}MPI\_Isend函数}{32}{subsubsection.5.2.1}%
+\contentsline {subsubsection}{\numberline {5.2.2}MPI\_Irecv函数}{33}{subsubsection.5.2.2}%
+\contentsline {subsubsection}{\numberline {5.2.3}消息请求完成函数MPI\_Wait}{34}{subsubsection.5.2.3}%
+\contentsline {subsubsection}{\numberline {5.2.4}消息请求完成函数MPI\_Waitany}{35}{subsubsection.5.2.4}%
+\contentsline {subsubsection}{\numberline {5.2.5}消息请求完成函数MPI\_Waitall}{36}{subsubsection.5.2.5}%
+\contentsline {subsubsection}{\numberline {5.2.6}消息请求完成函数MPI\_Waitsome}{36}{subsubsection.5.2.6}%
+\contentsline {subsubsection}{\numberline {5.2.7}消息请求检查函数MPI\_Test}{37}{subsubsection.5.2.7}%
+\contentsline {subsubsection}{\numberline {5.2.8}消息请求检查函数MPI\_Testany}{37}{subsubsection.5.2.8}%
+\contentsline {subsubsection}{\numberline {5.2.9}消息请求检查函数MPI\_Testall}{38}{subsubsection.5.2.9}%
+\contentsline {subsubsection}{\numberline {5.2.10}消息请求检查函数MPI\_Testsome}{38}{subsubsection.5.2.10}%
+\contentsline {subsection}{\numberline {5.3}持久通讯}{39}{subsection.5.3}%
+\contentsline {subsubsection}{\numberline {5.3.1}消息请求检查函数MPI\_Send\_init}{39}{subsubsection.5.3.1}%
+\contentsline {subsubsection}{\numberline {5.3.2}MPI\_Recv\_init函数}{39}{subsubsection.5.3.2}%
+\contentsline {subsubsection}{\numberline {5.3.3}MPI\_Start函数}{40}{subsubsection.5.3.3}%
+\contentsline {subsubsection}{\numberline {5.3.4}MPI\_Startall函数}{40}{subsubsection.5.3.4}%
+\contentsline {subsubsection}{\numberline {5.3.5}MPI\_Request\_free函数}{41}{subsubsection.5.3.5}%
+\contentsline {subsubsection}{\numberline {5.3.6}MPI\_Cancel函数}{41}{subsubsection.5.3.6}%
+\contentsline {subsubsection}{\numberline {5.3.7}MPI\_Test\_cancelled函数}{42}{subsubsection.5.3.7}%
+\contentsline {subsubsection}{\numberline {5.3.8}函数}{42}{subsubsection.5.3.8}%

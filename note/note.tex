@@ -3,6 +3,7 @@
 \usepackage{graphicx}%引用图包
 \usepackage{amsfonts,amsmath,amssymb,amstext,array}%数学相关宏包
 \usepackage{xcolor}
+\usepackage{hyperref} 
 \makeatletter
 \renewcommand*\env@matrix[1][*\c@MaxMatrixCols c]{%
 \hskip -\arraycolsep
@@ -14,6 +15,9 @@
 
 \title{并行计算}%文章题目
 \maketitle% 显示上述标题信息
+
+\newpage
+\tableofcontents
 
 \section{矩阵乘并行计算}
 
@@ -714,9 +718,11 @@ mpi是基于分布式内存系统，而openmp和pthread基于共享内存系统�
 \end{tabular}
 
 
-\subsection{MPI通信子(通信域)}
+\subsection{MPI通信子(通信域)基础}
 
-功能：MPI的通信在通信域的控制和维护下进行 → 所有MPI通信任务都直接或间接用到通信域这一参数 → 对通信域的重组和划分可以方便实现任务的划分
+定义及功能：
+
+通信子定义了一组能够互相发消息的进程。在这组进程中，每个进程会被分配一个序号，称作秩(rank)，进程间显性地通过指定秩来进行通信。
 
 内容：
 \begin{itemize}
@@ -741,6 +747,12 @@ mpi是基于分布式内存系统，而openmp和pthread基于共享内存系统�
 \textbf{进程组产生方法：}
 
 可以当成一个集合的概念，可以通过“子、交、并、补”各种方法。所有进程组产生的方法都可以套到集合的各种运算。
+
+\subsection{进程通信原理}
+
+通信的基础建立在不同进程间发送和接收操作。一个进程可以通过指定另一个进程的秩以及一个独一无二的消息标签(tag)来发送消息给另一个进程。接受者可以发送一个接收特定标签标记的消息的请求（也可以不管标签，接收任何消息），然后依次处理接收到的数据。这样的涉及一个发送者以及一个接受者的通信被称作点对点通信。
+
+如果某个进程需要跟所有其他进程通信。则可用专门的接口来处理这类所有进程间的通信，称为集体性通信。
 
 \subsection{MPI基本函数}
 
@@ -864,7 +876,7 @@ int MPI\_Comm\_Create(
 
 \paragraph{MPI\_Comm\_split函数}~{}
 
-int MPIAPI MPI\_Comm\_split(
+int MPI\_Comm\_split(
 
     \qquad MPI\_Comm comm,//[传入]要拆分的通信子。也就是被划分的范围
 
@@ -884,7 +896,7 @@ int MPIAPI MPI\_Comm\_split(
 
 \paragraph{MPI\_Comm\_free函数}~{}
 
-int MPIAPI MPI\_Comm\_free(
+int MPI\_Comm\_free(
     
     \qquad MPI\_Comm *comm //[输入]指向要释放的通信子的指针
 
@@ -909,9 +921,9 @@ int MPIAPI MPI\_Comm\_free(
 
 阻塞式：发送或接受完数据后该rank进程才会继续执行。而且必须发送成功(但不一定接收成功)。
 
-\subsection{MPI\_Send函数}
+\subsubsection{MPI\_Send函数}
 
-MPI\_Send(
+int MPI\_Send(
 
     \qquad void* data,//[传入]发送缓冲区地址
 
@@ -933,9 +945,9 @@ MPI\_Send(
     \item 备注：为非本地函数，成功完成取决于是否存在匹配的接收函数。
 \end{itemize}
 
-\subsection{MPI\_Recv函数}
+\subsubsection{MPI\_Recv函数}
 
-int MPIAPI MPI\_Recv(
+int MPI\_Recv(
 
     \qquad void            *buf,//[传出]接收缓冲区地址
 
@@ -949,7 +961,7 @@ int MPIAPI MPI\_Recv(
 
     \qquad MPI\_Comm       recv\_comm,//[传入](接收方)通信子，需要与send中的相同。通常情况下send和recv均为MPI\_COMM\_WOLRD
 
-    \qquad MPI\_Status      *status //[传出]接受状态，一般不使用该参数，直接赋常量MPI\_STATUS\_IGNORE即可
+    \qquad MPI\_Status      *status //[传出]接受状态，即指向描述已完成操作的MPI\_Status对象(结构体)的指针。如果不需要该状态信息，直接赋常量MPI\_STATUS\_IGNORE即可
 
 );
 
@@ -971,15 +983,15 @@ int MPIAPI MPI\_Recv(
 \paragraph{函数成功接受的必要条件}~{}
 
 \begin{itemize}
-    \item \textcolor{red}{send\_comm==recv\_comm}
+    \item \textcolor{red}{send\_comm==recv\_comm(都是要为接收方的通信子)}
     \item \textcolor{red}{send\_tag==recv\_tag}
-    \item \textcolor{red}{send\_dest==recv\_rank(进程编号)}
-    \item \textcolor{red}{send\_tag==recv\_tag}
+    \item \textcolor{red}{send\_dest==recv\_rank(接收方进程编号)}
+    \item \textcolor{red}{send\_rank(发送方进程编号)==recv\_source}
 \end{itemize}
 
-\subsection{MPI\_Sendrecv合成函数}
+\subsubsection{MPI\_Sendrecv合成函数}
 
-int MPIAPI MPI\_Sendrecv(
+int MPI\_Sendrecv(
   
     \qquad void         *sendbuf,//[传入]发送缓冲区地址
     
@@ -1004,6 +1016,7 @@ int MPIAPI MPI\_Sendrecv(
     \qquad MPI\_Comm     comm,//[传入](接收方)通信子
 
     \qquad MPI\_Status   *status//[传出]接受状态，同上
+
 );
 
 \begin{itemize}
@@ -1012,7 +1025,7 @@ int MPIAPI MPI\_Sendrecv(
     \item 备注：send、recv、sendrecv互相兼容，sendrecv既可以接受send的数据，也可以给recv发送数据。
 \end{itemize}
 
-\subsection{MPI\_Sendrecv\_Replace合成函数}
+\subsubsection{MPI\_Sendrecv\_Replace合成函数}
 
 int MPI\_Sendrecv\_replace(
 
@@ -1033,6 +1046,7 @@ int MPI\_Sendrecv\_replace(
     \qquad MPI\_Comm comm,//[传入](接收方)通信子
 
     \qquad MPI\_Status*status//[传出]接受状态，同上
+
 )
 
 \begin{itemize}
@@ -1041,32 +1055,488 @@ int MPI\_Sendrecv\_replace(
     \item 备注：与Sendrecv相比，不同之处在于使用同一个缓冲区来接收和发送数据(因此前三个参数是一样的)。也正因为如此，效率相比于Sendrecv低下。
 \end{itemize}
 
+\subsubsection{消息查询函数MPI\_Probe}
+
+int MPI\_Probe(
+
+    \qquad int         source,//[传入]查询的进程编号
+
+    \qquad int         tag,//[传入]查询的消息标记
+
+    \qquad MPI\_Comm   comm,//[传入]查询的通信子
+
+    \qquad MPI\_Status *status//[传出]接受状态，同上
+
+);
+
+\begin{itemize}
+    \item 功能：探测接收消息的内容，但不影响实际接收到的消息。
+    \item 返回值：函数执行成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：为阻塞型探测，直到有一个符合条件的消息到达才返回，\textbf{即函数成功返回则一定接收到了信息}。
+\end{itemize}
+
+\subsubsection{消息查询函数MPI\_IProbe}
+
+int MPI\_IProbe(
+
+    \qquad int         source,//[传入]查询的进程编号
+
+    \qquad int         tag,//[传入]查询的消息标记
+
+    \qquad MPI\_Comm   comm,//[传入]查询的通信子
+
+    \qquad int         *flag,//[传出]标记，如果找到了符合要求的信息(source、tag、comm)，就为1，否则为0
+
+    \qquad MPI\_Status *status//[传出]接受状态，同上
+
+);
+
+\begin{itemize}
+    \item 功能：同Probe，但为非阻塞型。
+    \item 返回值：函数执行成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：为非阻塞型探测，无论是否有一个符合条件的消息到达，都立刻返回。通过flag判断是否找到。
+\end{itemize}
+
+\subsubsection{消息查询函数MPI\_Get\_Counte}
+
+int MPI\_Get\_count(
+
+    \qquad MPI\_Status   *status,//[传出]接收状态
+
+    \qquad MPI\_Datatype datatype,//[传入]每个接收缓冲区元素的数据类型
+
+    \qquad int          *count//[传出]接收到的元素数目
+
+);
+
+\begin{itemize}
+    \item 功能：获得接收到的某一种类型的元素数量。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：通过对count的值进行修改。
+\end{itemize}
+
+\subsection{非阻塞式}
+
+\paragraph{非阻塞式(异步通信)与阻塞式(同步通信)区别}
+
+\begin{itemize}
+    \item 同步通信中在接受到数据和发送完数据之前，进程处于挂起状态，完成后才允许进程继续执行下一语句。
+    \item 异步通信中发送方在将要发送的消息在消息缓冲区中后，即可返回；接受方不管消息缓冲区中是否已有发送原语发送的消息，都将返回。当消息被确切地发出或收到时，系统将用中断信号(非阻塞式会产生独有的句柄request)通知发送方或接受方。在此之前，它们可以周期性地查询、暂时挂起或执行其它计算，以实现计算与通信的重叠。
+    \item 异步通信需要系统提供一个消息缓冲区，同步通信则不需要。
+    \item 在同步通信中，通信可以是异步开始的，但必将是同步结束的；在异步通信中，通信可以是异步开始的，也可以是异步结束。
+\end{itemize}
+
+\subsubsection{MPI\_Isend函数}
+
+int MPI\_Isend(
+
+    \qquad void*                data,//[传入]发送缓冲区地址
+
+    \qquad int                  count,//[传入]数据大小
+
+    \qquad MPI\_Datatype        datatype,//[传入]信息的数据类型
+
+    \qquad int                  dest,//[传入]目标的进程编号
+
+    \qquad int                  tag,//[传入]消息标记(用于区分不同类型的消息)
+
+    \qquad MPI\_Comm            send\_comm,//[传入]目标的通信子
+
+    \qquad MPI\_Request         *request //[传出]\textcolor{red}{所请求的通信操作的句柄}，用来描述非阻塞发送或接收的完成情况。是提供给后面的非阻塞通信检测/等待函数用的。
+    
+    )
+
+\begin{itemize}
+    \item 功能：启动标准模式发送操作，在调用后不用等待通信完全结束就可以返回。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：本地函数，此函数可以在将消息发送到缓冲区之前返回。\textcolor{red}{也就是说，在执行完该函数后，数据并没有完全写入缓冲区就已经开始执行接下来的命令了，并不会阻塞在这里等待发送完成，}因此函数返回后不能立刻修改data中的内容，否则发送的数据也跟着变化，需要执行消息请求完成函数MPI\_Wait保证发送完毕。
+\end{itemize}
+
+\subsubsection{MPI\_Irecv函数}
+
+int MPI\_Irecv(
+
+    \qquad void            *buf,//[传出]接收缓冲区地址
+
+    \qquad int             count,//[传入]接收的数据大小
+
+    \qquad MPI\_Datatype   datatype,//[传入]信息的数据类型
+
+    \qquad int             source,//[传入]指定来源的进程编号，若为MPI\_ANY\_SOURCE表示任意来源
+
+    \qquad int             tag,//[传入]指定来源的消息标记，若为MPI\_ANY\_TAG表示任意标签都接受
+
+    \qquad MPI\_Comm       recv\_comm,//[传入](接收方)通信子，需要与send中的相同。通常情况下send和recv均为MPI\_COMM\_WOLRD
+
+    \qquad MPI\_Status     *status,//[传出]接受状态，即指向描述已完成操作的MPI\_Status对象(结构体)的指针。如果不需要该状态信息，直接赋常量MPI\_STATUS\_IGNORE即可
+
+    \qquad MPI\_Request    *request//[传出]\textcolor{red}{所请求的通信操作的句柄}，同之前
+
+);
+
+\begin{itemize}
+    \item 功能：执行接收操作，在调用后不用等待通信完全结束就可以返回。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：此函数是本地的。此函数可以在将消息接收到缓冲区之前返回。\textcolor{red}{即该函数返回后，数据同样并没有写入完全缓冲区，接收并没有完成，}同样需要执行消息请求完成函数MPI\_Wait保证接收完毕后才能操作这部分数据。
+    \item 在调用wait和test后，已经完成的通信操作的句柄request将不可用。
+\end{itemize}
+
+\subsubsection{消息请求完成函数MPI\_Wait}
+
+int MPI\_Wait(
+
+    \qquad MPI\_Request *request,//[传入]通信对象的句柄
+
+    \qquad MPI\_Status  *status//[传出]接收状态，同之前
+
+);
+
+\begin{itemize}
+    \item 功能：用于等待MPI请求完成。
+    \item 返回值：功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：
+    
+    {
+        \begin{itemize}
+            \item \textbf{此函数成功返回时，表示request指针表示的通信操作完成，否则通信操作函数就不会结束。}\textcolor{red}{也就是说程序会卡住直到函数执行完毕}。
+            \item 用于一个非阻塞通信。
+            \item 非本地操作，成功完成可能取决于其他进程的匹配操作，即一直等到相应的通信完成后才成功返回。
+            \item 通信操作为空时，立即返回空状态。
+            \item 往往与isend和irecv连用，与阻塞式区别在于程序在执行到通信时会不会挂起。
+            \item 若接收消息的进程先接收、发送消息的进程再发送，则MPI就只会填充程序提供的缓冲区(发送，接收缓冲区)。而无需使用MPI提供的消息缓冲区。这可以减少在接收进程端的内存拷贝操作，提高性能。
+        \end{itemize}
+    }
+
+\end{itemize}
+
+\subsubsection{消息请求完成函数MPI\_Waitany}
+
+int MPI\_Waitany(
+
+    \qquad int         count,//[传入]通信对象的数目
+
+    \qquad MPI\_Request *array\_of\_requests,//[传入](未完成的)通信对象句柄的数组指针：定义为MPI\_Request request[count]
+
+    \qquad int         *index,//[传出]指向一个整数的指针，整数表示通信完成的通信对象在数组中的索引
+
+    \qquad MPI\_Status  *status//[传出]接受状态
+
+);
+
+\begin{itemize}
+    \item 功能：用于等待非阻塞通信对象数组中的任意一个通信对象的完成。当存在多个通信对象时，一旦有一个通信完成，就返回该通信所对应通信对象的序号index，并释放该通信对象，并把该通信的相关信息存放在status中。
+    \item 返回值：功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：
+    
+    注意区分*request和*array\_of\_requests：
+
+    {
+        \begin{itemize}
+            \item *request:\textcolor{red}{指的是单个通信对象句柄的地址，调用时传入$\&$，同Ised和Irecv。}
+            \item *array\_of\_requests：\textcolor{red}{指的是通信对象的集合，调用时传入集合即数组的名字。}
+        \end{itemize}
+    }
+
+    注意区分*index和*array\_of\_index：
+    
+    {
+        \begin{itemize}
+            \item *index:\textcolor{red}{在wait、waitany这种输出为1个通信对象的情况下，地址为该通信对象在数组中的编号；}
+            \item *array\_of\_index：\textcolor{red}{在waitsome这种输出为多个通信对象的情况下，为数组指针，表示第I个通信对象对应的通信完成信息存放在array\_of\_statuses[I]中，其中完成为1，未完成为0；}
+            \item waitall中没有index。
+        \end{itemize}
+    }
+
+\end{itemize}
+
+\subsubsection{消息请求完成函数MPI\_Waitall}
+
+int MPI\_Waitall(
+
+    \qquad int         count,//[传入]通信对象的数目
+
+    \qquad MPI\_Request *array\_of\_requests,//[传入]通信对象句柄的数组指针
+
+    \qquad MPI\_Status  *array\_of\_statuses//[传出]接受状态
+
+);
+
+\begin{itemize}
+    \item 功能：用于等待非阻塞通信对象数组中的所有通信对象的完成。当所有的通信完成时才返回，并释放所有的通信对象。
+    \item 返回值：功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：无。
+\end{itemize}
+
+\subsubsection{消息请求完成函数MPI\_Waitsome}
+
+int MPI\_Waitsome(
+
+    \qquad int         incount,//[传入]通信对象的数目
+
+    \qquad MPI\_Request *array\_of\_requests,//[传入]通信对象句柄的数组指针
+
+    \qquad int         outcount,//[传出]信完成的通信对象的数量
+
+    \qquad int         *array\_of\_index,//[传出]数组指针，表示通信完成的全部通信对象在数组中的索引
+
+    \qquad MPI\_Status  *array\_of\_status//[传出]接受状态
+
+);
+
+\begin{itemize}
+    \item 功能：用于等待非阻塞通信对象数组中的任意数量的通信对象的完成。当任意数目的通信完成时就返回，并释放通信完成的通信对象。
+    \item 返回值：功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：完成非阻塞通信的数目记录在outcount中，相应的非阻塞通信对象的下标存放在下标数组中，对应通信的相关信息存放在array\_of\_statuses中。
+\end{itemize}
+
+\subsubsection{消息请求检查函数MPI\_Test}
+
+\textbf{test与wait区别：}
+
+\begin{itemize}
+    \item wait要一直等到相应的非阻塞通信完成后才成功返回，而test在调用后会立刻返回。
+    \item wait在any、some的情况下，会给出具体的完成的通信对象的编号；而test在any的情况下则不会，只会给出当前是否满足通信完成的判断，仅some情况下给出编号。
+    \item 相比于wait中的index指示完成的通信对象的编号，在test中用flag来取代，仅用于判断是否满足要求。
+\end{itemize}
+
+int MPI\_Test(
+
+    \qquad MPI\_Request  *request,//[传入]通信对象句柄的指针
+
+    \qquad int           *flag,//[传出]指示请求是否已完成的判断指针，通信完成为1，否则为0
+
+    \qquad MPI\_Status   *status//[传出]接受状态
+
+);
+
+\begin{itemize}
+    \item 功能：用于测试非阻塞通信中通信完成的情况，立即返回。
+    \item 返回值：功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：函数执行后立刻返回，不会等待。
+\end{itemize}
+
+\subsubsection{消息请求检查函数MPI\_Testany}
+
+int MPI\_Testany(
+
+    \qquad int           count,//[传入]通信对象的数目
+
+    \qquad MPI\_Request  *request,//[传入]通信对象句柄的数组指针
+
+    \qquad int           *flag,//[传出]指示请求是否已完成的判断指针，对应索引位置的通信完成则为1，否则为0
+
+    \qquad MPI\_Status   *status//[传出]接受状态
+    
+);
+
+\begin{itemize}
+    \item 功能：用于测试非阻塞通信数组中是否有任何一个对象已经完成，若有对象完成\textbf{(若有多个，任取一个)}，令flag=1立即返回，并释放该对象；否则令flag=0并立即返回。
+    \item 返回值：功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：如果调用时没有完成的通信，flag仍然为0。
+\end{itemize}
+
+\subsubsection{消息请求检查函数MPI\_Testall}
+
+int MPI\_Testall(
+
+    \qquad int           count,//[传入]通信对象的数目
+
+    \qquad MPI\_Request  *request,//[传入]通信对象句柄的数组指针
+
+    \qquad int           *flag,//[传出]指示请求是否已完成的判断指针，全部通信完成则为1，否则为0
+
+    \qquad MPI\_Status   *status//[传出]接受状态
+    
+);
+
+\begin{itemize}
+    \item 功能：当非阻塞通信数组中有任意一个非阻塞通信对象对应的非阻塞通信没有完成时，令flag=false并立即返回；当所有通信都已经完成时，令flag=true并立即返回。
+    \item 返回值：功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：无。
+\end{itemize}
+
+\subsubsection{消息请求检查函数MPI\_Testsome}
+
+int MPI\_Testsome(
+
+    \qquad int           incount,//[传入]通信对象的数目
+
+    \qquad MPI\_Request  *request,//[传入]通信对象句柄的数组指针
+
+    \qquad int           outcount,//[传出]通信完成的通信对象的数目
+
+    \qquad int           *array\_of\_indices,//[传出]数组指针，表示通信完成的全部通信对象在数组中的索引
+
+    \qquad MPI\_Status   *status//[传出]接受状态
+    
+);
+
+\begin{itemize}
+    \item 功能：立即返回，有几个非阻塞通信已经完成，就令outcount等于几，且将完成对象的下标记录在数组中。若没有非阻塞通信完成，则返回outcount=0。
+    \item 返回值：功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：\textbf{此函数没有flag判断参数，是通过outcount参数是否为0来发挥原flag作用的。}
+\end{itemize}
+
+\subsection{持久通讯}
+
+\subsubsection{消息请求检查函数MPI\_Send\_init}
+
+int MPI\_Send\_init(
+
+    \qquad void         *buf,//[传入]发送缓冲区地址
+
+    \qquad int          count,//[传入]数据大小
+
+    \qquad MPI\_Datatype datatype,//[传入]信息的数据类型
+
+    \qquad int          dest,//[传入]目标的进程编号
+
+    \qquad int          tag,//[传入]消息标记
+
+    \qquad MPI\_Comm     comm,//[传入]目标的通信子
+
+    \qquad MPI\_Request  *request//[传出]所请求的通信操作的句柄，同之前
+
+);
+
+\begin{itemize}
+    \item 功能：执行发送操作，但请求是持久的，即产生的通信句柄可以重复使用，但每次使用时需要激活和取消占用。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：如果另外一个通信在一个并行计算的内部循环中不断地以\textbf{同样的参数}被执行，则没必要每次重新创建通信句柄，即可把这些通信参数一次性捆绑到一个持久通信请求，然后不断用该请求初始化(激活)和释放(取消占用)消息。
+    \item 注意：\textbf{在激活的区间内，该通信就等于一个非阻塞通信}。
+    
+    \textbf{释放有两种方法，一种是free释放，另一种是wait或者test成功返回，且不可以同时采用。}
+\end{itemize}
+
+\subsubsection{MPI\_Recv\_init函数}
+
+int MPI\_Recv\_init(
+
+    \qquad void            *buf,//[传出]接收缓冲区地址
+
+    \qquad int             count,//[传入]接收的数据大小
+
+    \qquad MPI\_Datatype   datatype,//[传入]信息的数据类型
+
+    \qquad int             source,//[传入]指定来源的进程编号，若为MPI\_ANY\_SOURCE表示任意来源
+
+    \qquad int             tag,//[传入]指定来源的消息标记，若为MPI\_ANY\_TAG表示任意标签都接受
+
+    \qquad MPI\_Comm       recv\_comm,//[传入](接收方)通信子，需要与send中的相同。通常情况下send和recv均为MPI\_COMM\_WOLRD
+
+    \qquad MPI\_Request  *request//[传出]所请求的通信对象的句柄
+
+);
+
+\begin{itemize}
+    \item 功能：执行接收操作，但请求是持久的，同样需要激活和取消占用。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：同上可用于化简接收循环。
+\end{itemize}
+
+\subsubsection{MPI\_Start函数}
+
+int MPI\_Start(
+
+    \qquad MPI\_Request *request //[传入]通信对象的句柄
+
+);
+
+\begin{itemize}
+    \item 功能：激活持久通信产生的句柄request所对应的通信。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：每次使用持久通信对象时都需要执行。
+\end{itemize}
+
+\subsubsection{MPI\_Startall函数}
+
+int MPI\_Startall(
+
+    \qquad int          count,//[传入]通信对象的数目
+
+    \qquad MPI\_Request *array\_of\_requests, //[传入]通信对象的句柄的数组指针
+
+);
+
+\begin{itemize}
+    \item 功能：激活持久通信产生的句柄所对应的通信集合。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：每次使用持久通信对象时都需要执行。
+\end{itemize}
+
+\subsubsection{MPI\_Request\_free函数}
+
+int MPI\_Request\_free(
+
+    \qquad MPI\_Request *requests, //[传入]通信对象的句柄
+
+);
+
+\begin{itemize}
+    \item 功能：释放通信对象(及所占用的内存资源)。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：每次使用的持久通信对象完毕时都需要执行。只能一个一个的释放。
+    
+    \textbf{若该通信请求相关联的通信操作尚未完成，则等待通信的完成再返回，因此通信请求的释放并不影响该通信的完成。}
+
+    该函数成功返回后request被置为MPI\_REQUEST\_NULL，与wait、test类似。
+
+\end{itemize}
+
+\subsubsection{MPI\_Cancel函数}
+
+int MPI\_Cancel(
+
+    \qquad MPI\_Request *request //[传入]通信对象的句柄
+
+);
+
+\begin{itemize}
+    \item 功能：非阻塞型，用于取消一个尚未完成的通信请求。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：原理是在MPI系统中设置一个取消该通信请求的标志后立即返回，具体的取消操作由MPI系统在后台完成。
+    
+    \textbf{若相应的通信请求已经开始，则它会正常完成，不受取消操作的影响；若相应的通信请求还没开始，则可以释放通信占用的资源。}
+
+    \textcolor{red}{仍需用MPI\_WAIT，MPI\_TEST或MPI\_REQUEST\_FREE来释放该通信请求。}
+
+\end{itemize}
+
+注意：\textcolor{red}{free和cancel都是针对非阻塞通信的，用于结束它们(前者释放后者取消)。}
+
+\subsubsection{MPI\_Test\_cancelled函数}
+
+int MPI\_Test\_cancelled(
+
+    \qquad MPI\_Status *status,//[传入]接收状态
+
+    \qquad int         *flag //[传出]通信对象通信情况，1表示请求成功被取消，否则为1
+
+);
+
+\begin{itemize}
+    \item 功能：测试以查看请求是否已取消。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：传入的为接受状态，想调用此函数不可将接受状态设置为不需要。此函数往往和MPI\_Cancel函数联用以查看取消情况。
+\end{itemize}
 
 
+
+
+
+
+
+
+
+
+
+\subsubsection{函数}
 
 \begin{itemize}
     \item 功能：
-    \item 参数：
-    {
-        \begin{itemize}
-            \item 
-        \end{itemize}
-    }
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
     \item 备注：
 \end{itemize}
-
-\begin{itemize}
-    \item 功能：
-    \item 参数：
-    {
-        \begin{itemize}
-            \item 
-        \end{itemize}
-    }
-    \item 备注：
-\end{itemize}
-
-
 
 
 
