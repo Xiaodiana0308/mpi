@@ -693,7 +693,7 @@ mpi是基于分布式内存系统，而openmp和pthread基于共享内存系统�
 \subsection{并行程序基本结构}
 
 \begin{itemize}
-    \item 进入MPI环境。产生通讯子(进程序号、进程数)。
+    \item 进入MPI环境。产生通信子(进程序号、进程数)。
     \item 程序主体。
     \item 退出MPI环境。
 \end{itemize}
@@ -925,11 +925,11 @@ int MPI\_Comm\_free(
 
 int MPI\_Send(
 
-    \qquad void* data,//[传入]发送缓冲区地址
+    \qquad void* data,//[传入]发送缓冲区地址(要发送数据的所在地址)
 
-    \qquad int count,//[传入]数据大小
+    \qquad int count,//[传入]要发送数据的大小
 
-    \qquad MPI\_Datatype datatype,//[传入]信息的数据类型
+    \qquad MPI\_Datatype datatype,//[传入]数据的类型
 
     \qquad int dest,//[传入]目标的进程编号
 
@@ -949,11 +949,11 @@ int MPI\_Send(
 
 int MPI\_Recv(
 
-    \qquad void            *buf,//[传出]接收缓冲区地址
+    \qquad void            *buf,//[传出]接收缓冲区地址(要接收数据的存放地址)
 
     \qquad int             count,//[传入]接收的数据大小
 
-    \qquad MPI\_Datatype   datatype,//[传入]信息的数据类型
+    \qquad MPI\_Datatype   datatype,//[传入]数据的类型
 
     \qquad int             source,//[传入]指定来源的进程编号，若为MPI\_ANY\_SOURCE表示任意来源
 
@@ -1520,15 +1520,496 @@ int MPI\_Test\_cancelled(
     \item 备注：传入的为接受状态，想调用此函数不可将接受状态设置为不需要。此函数往往和MPI\_Cancel函数联用以查看取消情况。
 \end{itemize}
 
+\subsection{高维进程}
+
+通常先定义一组按顺序序号从小到大的行通信子，然后利用MPI\_Comm\_split函数对每个通信子进行拆分，从而产生列通信子，最终组成二维进程。
+
+方法：在定义行通信子内将传入进程的color按一定的规律赋予不同的color值用于将进程划分给不同的通信子、以及赋予不同的key值用于指定进程在通信子内的优先级，然后利用split函数划分即可。
+
+\section{派生数据类型}
+
+通信时必须传递某一类型的数据，可以通过该方法来创建需要传递的某一类数据。
+
+数据类型描述方法：类型图 
+
+\textbf{类型图={<基类型0 偏移0>,<基类型1 偏移1>,...,<基类型n-1 偏移n-1>} }
+
+\begin{itemize}
+    \item 基类型可以是预定义类型或派生类型;
+    \item 偏移可正可负，没有递增或递减的顺序要求;
+    \item lb：下界，所有的块中\textcolor{red}{偏移量}最小的大小。
+    \item ub：上界，所有的块中\textcolor{red}{偏移量+块大小}最大的大小。
+    \item extent：extent=ub-lb+e，其中e是能够使类型图的跨度满足该类型的类型表中的所有的类型都能达到下一个对齐要求所需要的最小非负整数值。
+    
+    跨度，该数据类型的类型图中从第一个基类型到最后一个基类型间的距离(到末尾结束位置)，若块是由多种数据类型组成，则取其中的最大值。
+
+\end{itemize}
+
+\subsection{连续数据类型CONTIGUOUS}
+
+\subsubsection{MPI\_Type\_contiguous函数}
+
+int MPI\_Type\_contiguous(
+
+    \qquad int           count,//[传入]新数据类型中的元素数(块大小)。
+
+    \qquad MPI\_Datatype oldtype,//[传入]每个元素的MPI数据类型。
+
+    \qquad MPI\_Datatype *newtype//[传出]新数据类型名字
+
+);
+
+\begin{itemize}
+    \item 功能：定义一个新的数据类型，该数据类型是现有数据类型的许多元素的串联。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：
+    
+    {
+        \begin{itemize}
+            \item 新数据类型的大小取决于旧类型的大小。
+            \item \textbf{块内元素类型相同、元素连续。}
+            \item 存放示例：\textcolor{red}{$a_1$、$a_2$、$a_3$}、$a_4$、$a_5$、\dots
+            \item \textcolor{blue}{得到的新类型是将一个已有的数据类型按顺序依次连续进行复制后的结果}。\textcolor{red}{还需要赋值的}。
+        \end{itemize}
+    }
+
+\end{itemize}
+
+\subsection{向量数据类型VECTOR}
+
+\subsubsection{MPI\_Type\_vector函数}
+
+int MPIAPI MPI\_Type\_vector(
+
+    \qquad int          count,//[传入]块数：向量中块的数量
+
+    \qquad int          blocklength,//[传入]块长度：每个块中的元素数量
+
+    \qquad int          stride,//[传入]步长：块间距(元素数据类型长度为单位)
+
+    \qquad MPI\_Datatype oldtype,//[传入]每个元素的MPI数据类型
+
+    \qquad MPI\_Datatype *newtype//[传出]新数据类型名字
+
+);
+
+\begin{itemize}
+    \item 功能：定义由指定大小的指定数量的块组成的新数据类型。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：\textbf{块内元素类型相同、元素连续；块之间的大小相等、间距相等、元素类型相等。}
+    
+    \textcolor{red}{所有的块间距指的都是一个块的开始和下一个块的开始之间的距离，或元素数或字节数。也称为位移，第一个块的位移就是0。}
+
+    \textcolor{blue}{原理是复制一个数据类型到含有相等大小块的空间，每个块内都是blocklength个旧数据类型的拷贝，块间距均为stride倍的元素(旧元素类型大小)}。
+
+\end{itemize}
+
+\subsubsection{MPI\_Type\_create\_hvector函数}
+
+int MPIAPI MPI\_Type\_create\_hvector(
+
+    \qquad int          count,//[传入]块数
+
+    \qquad int          blocklength,//[传入]块长度
+
+    \qquad MPI\_Aint    stride,//[传入]步幅：块间距(字节为单位)，注意步幅必须是旧数据类型范围的倍数
+
+    \qquad MPI\_Datatype oldtype,//[传入]每个元素的MPI数据类型
+
+    \qquad MPI\_Datatype *newtype//[传出]新数据类型名字
+
+);
+
+\begin{itemize}
+    \item 功能：同前一个。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：\textbf{与前一个类似，但间距的步幅为字节数而非元素数目。}
+\end{itemize}
+
+\subsection{索引数据类型INDEX}
+
+\subsubsection{MPI\_Type\_create\_hindexed函数}
+
+MPI\_Type\_indexed函数目前还在用，马上被替换了。区别在于传递的两个数组原来传递的是指针的形式，现在是传数组名字了；原来是以元素数目为单位，现在以字节为单位。
+
+int MPI\_Type\_create\_hindexed(
+
+    \qquad int             count,//[传入]块数
+
+    \qquad int             array\_of\_blocklengths[],//[传入]每个块的元素数数组
+
+    \qquad int             array\_of\_displacements[],//[传入]每个块的间距数组(步幅，字节为单位)，同上
+
+    \qquad MPI\_Datatype   oldtype,//[传入]每个元素的MPI数据类型
+
+    \qquad MPI\_Datatype   *newtype//[传出]新数据类型名字
+
+);
+
+\begin{itemize}
+    \item 功能：定义由不指定大小指定数量的块组成的新数据类型。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：\textbf{块内元素类型相同、块内元素连续；块之间的大小无需相等、间距无需相等、元素类型相等。}
+    
+    \textcolor{blue}{原理是复制一个旧数据类型到含有大小不一定相等的块的空间，第i个块内旧数据类型的拷贝数目为array\_of\_blocklength[i]个，第i个块间距为array\_of\_displacements[i](字节为单位)}。
+
+\end{itemize}
+
+\subsection{结构体数据类型STRUCT}
+
+\subsubsection{MPI\_Type\_create\_struct函数}
+
+MPI\_Type\_create\_struct(
+
+    \qquad int             count,//[传入]块数
+
+    \qquad int             array\_of\_blocklengths[],//[传入]每个块的元素数数组
+
+    \qquad int             array\_of\_displacements[],//[传入]每个块的间距数组(步幅，字节为单位)，同上
+
+    \qquad MPI\_Datatype   array\_of\_types[],//[传入]每个块的元素MPI数据类型数组
+
+    \qquad MPI\_Datatype   *newtype//[传出]新数据类型名字
+
+);
+
+\begin{itemize}
+    \item 功能：定义一个新的数据类型，每个数据块具有指定的数据类型、位移和大小。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：\textbf{块内元素类型相同、块内元素连续；块之间的大小无需相等、间距无需相等、元素类型无需相等。}
+    
+    \textcolor{blue}{原理是复制若干种个旧数据类型到一个块序列中(每个块内旧数据类型相同)，块之间数据类型可以不同，第i个块内旧数据类型的拷贝数目为array\_of\_blocklength[i]个，第i个块间距为array\_of\_displacements[i]}。
+
+    \item 其他几种数据类型都可以通过struct得到。
+\end{itemize}
+
+\subsubsection{派生数据类型使用}
+
+比如将数组的不同位置的地址赋值给派生数据类型，就可以实现在数组的基础上将数组划分为若干需要的部分，从而方便管理，并且加速处理。
+
+\subsection{数据类型辅助函数}
+
+\subsubsection{MPI\_Type\_commit函数}
+
+int MPI\_Type\_commit(
+
+    \qquad MPI\_Datatype *datatype //创建的数据类型
+
+);
+
+功能：提交自定义的数据类型，定义的数据类型必须先提交才能使用。
+
+\subsubsection{MPI\_Type\_free函数}
+
+int MPI\_Type\_free(
+
+    \qquad MPI\_Datatype *datatype //要释放的数据类型
+
+);
+
+功能：释放数据类型。
+
+\subsubsection{MPI\_Type\_get\_extent函数}
+
+int MPI\_Type\_get\_extent(
+
+    \qquad MPI\_Datatype datatype,//需判断长度的数据类型
+
+    \qquad MPI\_Aint     *lb,//[传出]返回最小数据类型长度(字节)
+
+    \qquad MPI\_Aint     *extent//[传出]返回数据类型的范围(字节)
+
+);
+
+功能：获取数据类型的最小数据类型长度和长度。
+
+\textcolor{red}{最小数据类型长度即下界；数据类型的范围即跨度。}
+
+\subsubsection{MPI\_Address函数}
+
+int MPI\_Address(
+
+    \qquad void* location,//[传入]调用者的内存位置
+
+    \qquad MPI\_Aint *address//[传出]位置的对应起始地址(字节)
+    
+);
+
+功能：获取内存中某个位置的地址，字节为单位。
+
+\textcolor{red}{虽然在向量、索引数据类型的情况下，间距可以通过数组内元素序号的相减得到，但在多种数据组成的结构体数据类型的情况下，间距是无法直接得到的，因此需要通过这个函数来分别得到两个需要的块的起始位置的绝对值并相减，从而得到间距。第一个块直接是0即可。}
+
+\subsection{特殊数据类型与绝对原点}
+
+\subsubsection{派生数据类型的大小与延伸}
+
+对于一个定义好了的派生数据类型，其大小为1时对应的数据就为定义所采用的数据本身，而当其增大时，所对应的数据抽取起始位置是相比于前一个数据抽取起始位置(数据来源数组字符串上等)往后延伸的，如果数据不够就无法取到；如果存在多个数据来源，则也是在各数据来源上往后延伸一段长度的。
+
+且所定义的新数据类型的延伸尺寸就为跨度。
+
+\subsubsection{MPI\_UB和MPI\_LB}
+
+\begin{itemize}
+    \item 其为大小为0字节的特殊数据类型，会不增加原有的数据的长度。
+    \item 其能够改变已有数据类型的跨度，UB使跨度延伸上界的长度，LB使跨度延伸下界的长度。
+    \item 可用于vector数据类型下传递对角块矩阵，需要派生数据类型下一次取的数据在原跨度的基础上再\textbf{增加一个步幅}的长度(称为相对位移)，即可将定义好的数据类型与MPI定义的数据类型MPI\_UB，一起构成一个新的数据类型，那么就可以按这样的跨度传递特殊数据类型了。
+    \item 也可以直接通过index创建块非等距的数据类型，但其大小为1且无法变大小。
+\end{itemize}
+
+\subsubsection{绝对原点}
+
+MPI\_BOTTOM：派生类型起始地址，称为绝对原点。在MPI\_Address中返回的地址就是是相对于绝对原点的。
+
+在不使用相对位移的情况下，发送接收中可以使用MPI\_BOTTOM作为发送和接收数据的首地址(反正和数据的地址都是一样的)。
+
+\subsection{数据的打包与拆包}
+
+对于不同数据类型的数据和非连续的数据来说，可以采用之前的函数来新建一个数据类型，从而将这些数据做为整体一次发送。也可以将这些数据打包到一块，然后再发送，然后在接收端接收后再解包分开。
+
+打包和解包操作是为了发送不连续的数据在发送前显式地把数据包装到一个连续的缓冲区再一次发送，在接收之后从连续缓冲区中解包。
+
+\subsubsection{MPI\_Pack函数}
+
+int MPI\_Pack(
+
+    \qquad void            *inbuf,//[传入]指向待打包数据的指针(可选数据类型) 
+
+    \qquad int             incount,//[传入]要打包数据个数，可为空(则默认全部的某类型数据)
+
+    \qquad MPI\_Datatype   datatype,//[传入]要打包的数据类型
+
+    \qquad void            *outbuf,//[传出]打包后数据的位置(即缓冲区)(可选数据类型)
+
+    \qquad int             outsize,//[传入]缓冲区大小(字节)，可为空(则自动分配大小)
+
+    \qquad int             *position,//[传入传出]缓冲区中第一个用于打包的位置(地址偏移量)(字节)
+
+    \qquad MPI\_Comm       comm //[传入]当前通信子
+    
+);
+
+\begin{itemize}
+    \item 功能：单个函数是将某个位置的若干个某种数据类型的数据打包到一个连续的内存空间位置。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：
+    \item 
+    {
+        \begin{itemize}
+            \item 在发送数据前该函数可以多次使用，将不同的类型的数据打包到同一个内存。
+            \item 定义的*outbuf必须足够大，以存放全部被包入的数据，且不用每次打包时修改。
+            \item 定义的*position在每次打包时会自动更新偏移量的值，不用每次打包时修改。
+        \end{itemize}
+    }
+
+\end{itemize}
 
 
+\subsubsection{MPI\_Unpack函数}
 
+int MPI\_Pack(
 
+    \qquad void            *inbuf,//[传入]指向待解包缓冲区的指针(可选数据类型) 
 
+    \qquad int             insize,//[传入]缓冲区大小(字节)，可为空(则自动获得大小)
 
+    \qquad int             *position,//[传入传出]缓冲区中第一个用于打包的位置(地址偏移量)(字节)，
 
+    \qquad void            *outbuf,//[传出]解包后数据的位置(可选数据类型) 
 
+    \qquad int             outcount,//[传入]解包元素个数，可为空(则默认全部该类型数据)
 
+    \qquad MPI\_Datatype   datatype,//[传入]要解包的数据类型
+
+    \qquad MPI\_Comm       comm //[传入]当前通信子
+    
+);
+
+\begin{itemize}
+    \item 功能：将某个位置的打包数据中的某种数据类型的数据解压缩到某个连续内存中。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：
+    
+    {
+        \begin{itemize}
+            \item 在接收数据后该函数可以多次使用，直到全部解包，将同一个内存内不同类型的数据解包到指定位置。
+            \item 定义的*outbuf要能够容纳对应的解压数据。
+            \item 定义的*position在每次打包时会自动更新偏移量的值，不用每次解包时修改。
+        \end{itemize}
+    }
+\end{itemize}
+
+\subsubsection{MPI\_Pack\_size函数}
+
+int MPI\_Pack\_size(
+
+    \qquad int           incount,//[传入]数据个数
+
+    \qquad MPI\_Datatype datatype,//[传入]数据类型
+
+    \qquad MPI\_Comm     comm,//[传入]当前通信子
+
+    \qquad int           *size//[传出]输出所需尺寸(字节)
+
+);
+
+\begin{itemize}
+    \item 功能：计算打包某种类型数据所需的缓冲区大小。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：同样只能处理一种数据类型的大小，不可累加。
+\end{itemize}
+
+\section{聚合通信}
+
+与点到点通信不同，其是两个进程之间的通信。而在聚合通信下，通信子内所有的进程均参与通讯。
+
+\subsection{障碍同步MPI\_Barrier}
+
+int MPI\_Barrier(
+    
+    \qquad MPI\_Comm //[传入]进程所在通信子
+    
+);
+
+\begin{itemize}
+    \item 功能：线程运行到此函数时等待，直到通信子内所有进程都运行到该函数时再一起返回，继续运行。用于将一个通信子内所有的进程同步。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：无。
+\end{itemize}
+
+\subsection{广播MPI\_Bcast}
+
+int MPI\_Bcast(
+
+    \qquad void* buffer,//[传入]发送缓冲区地址(要发送的数据，任意类型)
+    
+    \qquad int count,//[传入]数据个数
+    
+    \qquad MPI\_Datatype datatype,//[传入]数据类型
+    
+    \qquad int root,//[传入]发送广播的序列号(根进程)
+    
+    \qquad MPI\_Comm comm //[传入]进程所在通信子
+    
+);
+
+\begin{itemize}
+    \item 功能：将序列号为root的进程的数据广播到通信子comm内所有进程(包括本身)。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：为阻塞式广播，全部接收后才返回。
+\end{itemize}
+
+\subsection{收集MPI\_Gather}
+
+MPI\_Gather(
+
+    \qquad void* send\_data,//[传入]该进程需要聚合的数据
+
+    \qquad int send\_count,//[传入]该进程内要聚集的数据个数(必须相等)
+
+    \qquad MPI\_Datatype send\_datatype,//[传入]聚集的数据类型
+
+    \qquad void* recv\_data,//[传出]聚合后数据的存放位置
+
+    \qquad int recv\_count,//[传入]根进程从该进程接收的数据长度(必须相等)
+
+    \qquad MPI\_Datatype recv\_datatype,//[传入]接收的数据类型
+
+    \qquad int root,//[传入]聚集数据汇入的(根进程)号
+
+    \qquad MPI\_Comm communicator //[传入]进程所在通信子
+    
+);
+
+\begin{itemize}
+    \item 功能：将一个进程组(通信子)内所有的的发送缓冲区内参数(包括自身的)根据发送这些数据的进程的序列号将它们依次存放到自已的消息缓冲区中。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：
+    
+    {
+        \begin{itemize}
+            \item 效果等同于一个组中的n个进程(包括根进程在内)都执行了一个send，同时根进程执行了n次recv。
+            \item \textbf{每一个函数都包括了发送和接受部分，只不过只有根进程接收。}
+            \item 每个进程都需要调用一次该函数。
+            \item 在每个进程和根进程之间，发送的数据量必须和接收的数据量相等，但发送方和接收方之间的不同数据类型映射仍然是允许的。而相似函数MPI\_Gatherv函数则允许各进程传入大小不相等的数据。
+            \item 是阻塞的。
+            \item MPI\_Allgather函数：与MPI\_Gather意义相同，少一个root参数，但此时是所有的进程都将接收结果，而不是只有根进程接收结果。
+        \end{itemize}
+    }
+\end{itemize}
+
+\subsection{散播MPI\_Scatter}
+
+int MPI\_Scatter(
+    
+    \qquad void* sendbuf,//[传入]要发送的数据
+
+    \qquad int sendcount, //[传入]要发送的元素个数
+
+    \qquad MPI\_Datatype sendtype,//[传入]数据类型
+
+    \qquad void* recvbuf,//[传出]接收消息的接收缓冲区地址
+
+    \qquad int recvcount, //[传入]接收的元素个数
+
+    \qquad MPI\_Datatype recvtype,//[传入]接收的元素类型
+                
+    \qquad int root, //[传入]发送进程的(根进程)号
+    
+    \qquad MPI\_Comm comm //[传入]进程所在通信子
+    
+);
+
+\begin{itemize}
+    \item 功能：将某个进程的发送缓冲区内参数发送给本进程组内的全部进程(包括自身的)的消息缓冲区中。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：
+    
+    {
+        \begin{itemize}
+            \item 效果等同于根进程执行了n次send操作，同时通信子内每个进程执行一次recv操作。
+            \item \textbf{每一个函数都包括了发送和接受部分，只不过只有根进程发送。}
+            \item 每个进程都需要调用一次该函数。
+            \item 发送的数据个数必须和接收的数据个数相等，但发送方和接收方之间的不同数据类型映射仍然是允许的。而相似函数MPI\_Scatterv函数则允许向各进程发送大小不相等的数据。
+            \item 是阻塞的。
+            \item MPI\_ALLGATHER：可使用MPI\_Alltoall替代。
+        \end{itemize}
+    }
+
+\end{itemize}
+
+\subsection{全交换MPI\_Alltoall}
+
+int MPI\_Alltoall(
+    
+    \qquad constvoid *sendbuf,//[传入]要发送的数据
+    
+    \qquad int sendcount,//[传入]要发送的元素个数
+    
+    \qquad MPI\_Datatype sendtype,//[传入]数据类型
+
+    \qquad void *recvbuf, //[传出]接收消息的接收缓冲区地址
+
+    \qquad int recvcount,//[传入]接收元素个数
+
+    \qquad MPI\_Datatype recvtype,//[传入]接收的元素类型
+
+    \qquad MPI\_Comm comm//[传出]进程所在通信子
+    
+);
+
+\begin{itemize}
+    \item 功能：每个进程都可以向其他若干的进程按进程次序发送数据，又同时按进程次序接受其他节点的数据。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：
+    
+    {
+        \begin{itemize}
+            \item 每个进程发给其他进程的内容都是不同的，就是将各自发送缓冲区里的内容按序发给其他进程，\textbf{每一个进程只会发送给另一个进程一个数据、而仅从另一个进程接受一个数据}。
+            \item 
+        \end{itemize}
+    }
+    
+\end{itemize}
 
 \subsubsection{函数}
 
@@ -1537,6 +2018,17 @@ int MPI\_Test\_cancelled(
     \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
     \item 备注：
 \end{itemize}
+
+\subsubsection{函数}
+
+\begin{itemize}
+    \item 功能：
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：
+\end{itemize}
+
+
+
 
 
 
