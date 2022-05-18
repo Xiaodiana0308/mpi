@@ -693,7 +693,7 @@ mpi是基于分布式内存系统，而openmp和pthread基于共享内存系统�
 \subsection{并行程序基本结构}
 
 \begin{itemize}
-    \item 进入MPI环境。产生通信子(进程序号、进程数)。
+    \item 进入MPI环境。产生通讯子(进程序号、进程数)。
     \item 程序主体。
     \item 退出MPI环境。
 \end{itemize}
@@ -718,23 +718,28 @@ mpi是基于分布式内存系统，而openmp和pthread基于共享内存系统�
 \end{tabular}
 
 
-\subsection{MPI通信子(通信域)基础}
+\subsection{MPI通讯子(通信域)基础}
 
 定义及功能：
 
-通信子定义了一组能够互相发消息的进程。在这组进程中，每个进程会被分配一个序号，称作秩(rank)，进程间显性地通过指定秩来进行通信。
+通讯子定义了一组能够互相发消息的进程。在这组进程中，每个进程会被分配一个序号，称作秩(rank)，进程间显性地通过指定秩来进行通信。
 
 内容：
 \begin{itemize}
     \item 上下文(context)：提供了一个相对独立的通信区域，不同的信息在不同的上下文中传递，不同的上下文的信息互不干扰，上下文可以区分不同的通信。
     \item 进程组(group)：组是一个进程的有序集合，在实现中可以看作是进程标识符的一个有序集。一个通信域对应一个进程组。
-组内的每个进程与一个整数rank相联系，称为序列号，从0开始并且是连续的。
+
+    组内的每个进程与一个整数rank相联系，称为序列号，从0开始并且是连续的。
+
     \item 虚拟处理器拓扑(topology)：\dots
 \end{itemize}
 
 附注：进程：一个进程对应一个pid号，同一个进程可以属于多个进程组(每个进程在不同进程组中有个各自的rank号)，因此也可以属于不同的通信域。
 
-默认(最大范围)：MPI\_COMM\_WOLRD，这是MPI已经预定义好的通信子，是一个包含所有进程的通信子。\textcolor{red}{最大集}。
+默认(最大范围)：MPI\_COMM\_WOLRD，这是MPI已经预定义好的通讯子，是一个包含所有进程的通讯子。\textcolor{red}{最大集}。
+
+参考链接：http://scc.ustc.edu.cn/zlsc/cxyy/200910/MPICH/mpi52.htm 
+
 
 \textbf{通信域产生方法：}
 
@@ -761,7 +766,7 @@ mpi是基于分布式内存系统，而openmp和pthread基于共享内存系统�
 \paragraph{MPI\_Init(\&argc, \&argv)}~{}
 
 \begin{itemize}
-    \item 功能：初始化MPI环境。产生一个通信子(称MPI\_COMM\_WORLD)
+    \item 功能：初始化MPI环境。产生一个通讯子(称MPI\_COMM\_WORLD)
     \item 参数：
     {
         \begin{itemize}
@@ -779,13 +784,13 @@ mpi是基于分布式内存系统，而openmp和pthread基于共享内存系统�
     \item 备注：任何MPI程序结束时，都需要调用该函数。不关心返回值。
 \end{itemize}
 
-\subsubsection{MPI通信子操作函数}
+\subsubsection{MPI通讯子操作函数}
 
 \paragraph{MPI\_Comm\_rank函数}~{}
 
 int MPI\_Comm\_rank(
 
-    \qquad MPI\_Comm comm, //[传入]当前进程所在的通信子
+    \qquad MPI\_Comm comm, //[传入]当前进程所在的通讯子
 
     \qquad int *rank //[传出]进程号
 
@@ -801,14 +806,14 @@ int MPI\_Comm\_rank(
 
 int MPI\_Comm\_size(
     
-    \qquad MPI\_Comm comm, //[传入](不一定本进程的)通信子。如果通信子为MP\_Comm\_WORLD，即获取总进程数
+    \qquad MPI\_Comm comm, //[传入](不一定本进程的)通讯子。如果通讯子为MP\_Comm\_WORLD，即获取总进程数
 
     \qquad int *size //[传出]进程数目
     
     ) 
 
 \begin{itemize}
-    \item 功能：是获取该通信子内的总进程数。
+    \item 功能：是获取该通讯子内的总进程数。
     \item 返回值：不关心。
     \item 备注：用法类似前一个。
 \end{itemize}
@@ -817,14 +822,14 @@ int MPI\_Comm\_size(
 
 int MPI\_Comm\_dup(
     
-    \qquad MPI\_Comm comm,//[传入]要复制的通信子
+    \qquad MPI\_Comm comm,//[传入]要复制的通讯子
 
-    \qquad MPI\_Comm *newcomm //[传出]新的通信子，具有相同的组和从源复制的任何缓存信息，但它包含新的上下文信息
+    \qquad MPI\_Comm *newcomm //[传出]新的通讯子，具有相同的组和从源复制的任何缓存信息，但它包含新的上下文信息
     
     )
 
 \begin{itemize}
-    \item 功能：复制现有通信子及其所有缓存的信息
+    \item 功能：复制现有通讯子及其所有缓存的信息
     \item 返回值：不关心。
     \item 备注：无。
 \end{itemize}
@@ -833,19 +838,19 @@ int MPI\_Comm\_dup(
 
 int MPI\_Comm\_compare(
     
-    \qquad MPI\_Comm comm1,//[传入]要比较的通信子1
+    \qquad MPI\_Comm comm1,//[传入]要比较的通讯子1
 
-    \qquad MPI\_Comm comm2 //[传入]要比较的通信子2
+    \qquad MPI\_Comm comm2 //[传入]要比较的通讯子2
     
     )
 
 \begin{itemize}
-    \item 功能：比较两个通信子
+    \item 功能：比较两个通讯子
     \item 返回值：
     
     {
         \begin{itemize}
-            \item MPI\_IDENT：两个通信子的组和上下文相同。
+            \item MPI\_IDENT：两个通讯子的组和上下文相同。
             \item MPI\_CONGRUENT：上下文不同、组相同。
             \item MPI\_SIMILAR：上下文不同，组的成员相同但次序不同。
             \item MPI\_UNEQUAL：都不相同。
@@ -860,56 +865,64 @@ int MPI\_Comm\_compare(
 
 int MPI\_Comm\_Create(
     
-    \qquad MPI\_Comm comm, //[传入]源通信子
+    \qquad MPI\_Comm comm, //[传入]源通讯子
 
-    \qquad MPI\_Group group, //[传入]定义源通信子中请求的进程子集的组
+    \qquad MPI\_Group group, //[传入]定义从源通讯子中得到的进程子集(进程组)
 
-    \qquad MPI\_Comm *newcomm //[传出]新的通信子
+    \qquad MPI\_Comm *newcomm //[传出]新的通讯子
     
     )
 
 \begin{itemize}
-    \item 功能：提取一组进程的子集，以便在单独的通信子中进行单独的多指令多数据(MIMD)计算。
+    \item 功能：在通过组操作得到子进程组后，利用该函数得到一个子通讯子，子通讯子与子进程组对应。
     \item 返回值：返回成功时为MPI\_SUCCESS，否则为错误代码。
-    \item 备注：创建新的，老的还在。group需要自己定义。
+    \item 备注：
+    
+    {
+        \begin{itemize}
+            \item 创建新的，老的还在；
+            \item group的产生可参考第9章；
+            \item 可以通过此方法得到split函数无法获得的子通讯子。
+        \end{itemize}
+    }
 \end{itemize}
 
 \paragraph{MPI\_Comm\_split函数}~{}
 
 int MPI\_Comm\_split(
 
-    \qquad MPI\_Comm comm,//[传入]要拆分的通信子。也就是被划分的范围
+    \qquad MPI\_Comm comm,//[传入]要拆分的通讯子。也就是被划分的范围
 
-    \qquad int color,//[传入]相同的color的通信子会被划分成同一个子通信子
+    \qquad int color,//[传入]相同的color的通讯子会被划分成同一个子通讯子
 
-    \qquad int key,//[传入]新通信子中调用进程的相对等级(rank)。进程在新的通信子中按参数键的值定义的顺序排列
+    \qquad int key,//[传入]新通讯子中调用进程的相对等级(rank)。进程在新的通讯子中按参数键的值定义的顺序排列
     
-    \qquad \_Out\_ MPI\_Comm *newcomm //[传出]新的通信子
+    \qquad \_Out\_ MPI\_Comm *newcomm //[传出]新的通讯子
 
     )
 
 \begin{itemize}
     \item 功能：用于将指定的单个通信的进程组划分为任意数量的子组。
     \item 返回值：返回成功时为MPI\_SUCCESS，否则为错误代码。
-    \item 备注：将原有的通信子拆分了，新的组成老的。且子组的数量由在所有进程中指定的color数量确定。生成的通信器不重叠。
+    \item 备注：将原有的通讯子拆分了，新的组成老的。且子组的数量由在所有进程中指定的color数量确定。生成的通信器不重叠。
 \end{itemize}
 
 \paragraph{MPI\_Comm\_free函数}~{}
 
 int MPI\_Comm\_free(
     
-    \qquad MPI\_Comm *comm //[输入]指向要释放的通信子的指针
+    \qquad MPI\_Comm *comm //[输入]指向要释放的通讯子的指针
 
 );
 
 \begin{itemize}
-    \item 功能：释放通过dup、create或split创建的通信子。
+    \item 功能：释放通过dup、create或split创建的通讯子。
     \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
     \item 备注：
     
-    此操作将通信子标记为释放。句柄设置为MPI\_COMM\_NULL。任何使用此通信子的挂起操作都将正常完成。直到没有对对象的活动引用时，对象才会被释放。
+    此操作将通讯子标记为释放。句柄设置为MPI\_COMM\_NULL。任何使用此通讯子的挂起操作都将正常完成。直到没有对对象的活动引用时，对象才会被释放。
 
-    这一功能既适用于内部通信子，也适用于外部通信子。
+    这一功能既适用于内部通讯子，也适用于外部通讯子。
     
     所有缓存属性的删除被回调函数以不确定的顺序调用。
 
@@ -935,7 +948,7 @@ int MPI\_Send(
 
     \qquad int tag,//[传入]消息标记(用于区分不同类型的消息)
 
-    \qquad MPI\_Comm send\_comm//[传入]目标的通信子
+    \qquad MPI\_Comm send\_comm//[传入]目标的通讯子
     
     )
 
@@ -959,7 +972,7 @@ int MPI\_Recv(
 
     \qquad int             tag,//[传入]指定来源的消息标记，若为MPI\_ANY\_TAG表示任意标签都接受
 
-    \qquad MPI\_Comm       recv\_comm,//[传入](接收方)通信子，需要与send中的相同。通常情况下send和recv均为MPI\_COMM\_WOLRD
+    \qquad MPI\_Comm       recv\_comm,//[传入](接收方)通讯子，需要与send中的相同。通常情况下send和recv均为MPI\_COMM\_WOLRD
 
     \qquad MPI\_Status      *status //[传出]接受状态，即指向描述已完成操作的MPI\_Status对象(结构体)的指针。如果不需要该状态信息，直接赋常量MPI\_STATUS\_IGNORE即可
 
@@ -983,7 +996,7 @@ int MPI\_Recv(
 \paragraph{函数成功接受的必要条件}~{}
 
 \begin{itemize}
-    \item \textcolor{red}{send\_comm==recv\_comm(都是要为接收方的通信子)}
+    \item \textcolor{red}{send\_comm==recv\_comm(都是要为接收方的通讯子)}
     \item \textcolor{red}{send\_tag==recv\_tag}
     \item \textcolor{red}{send\_dest==recv\_rank(接收方进程编号)}
     \item \textcolor{red}{send\_rank(发送方进程编号)==recv\_source}
@@ -1013,7 +1026,7 @@ int MPI\_Sendrecv(
 
     \qquad int          recvtag,//[传入]指定来源的消息标记
 
-    \qquad MPI\_Comm     comm,//[传入](接收方)通信子
+    \qquad MPI\_Comm     comm,//[传入](接收方)通讯子
 
     \qquad MPI\_Status   *status//[传出]接受状态，同上
 
@@ -1043,7 +1056,7 @@ int MPI\_Sendrecv\_replace(
 
     \qquad int recvtag,//[传入]指定来源的消息标记
 
-    \qquad MPI\_Comm comm,//[传入](接收方)通信子
+    \qquad MPI\_Comm comm,//[传入](接收方)通讯子
 
     \qquad MPI\_Status*status//[传出]接受状态，同上
 
@@ -1063,7 +1076,7 @@ int MPI\_Probe(
 
     \qquad int         tag,//[传入]查询的消息标记
 
-    \qquad MPI\_Comm   comm,//[传入]查询的通信子
+    \qquad MPI\_Comm   comm,//[传入]查询的通讯子
 
     \qquad MPI\_Status *status//[传出]接受状态，同上
 
@@ -1083,7 +1096,7 @@ int MPI\_IProbe(
 
     \qquad int         tag,//[传入]查询的消息标记
 
-    \qquad MPI\_Comm   comm,//[传入]查询的通信子
+    \qquad MPI\_Comm   comm,//[传入]查询的通讯子
 
     \qquad int         *flag,//[传出]标记，如果找到了符合要求的信息(source、tag、comm)，就为1，否则为0
 
@@ -1140,7 +1153,7 @@ int MPI\_Isend(
 
     \qquad int                  tag,//[传入]消息标记(用于区分不同类型的消息)
 
-    \qquad MPI\_Comm            send\_comm,//[传入]目标的通信子
+    \qquad MPI\_Comm            send\_comm,//[传入]目标的通讯子
 
     \qquad MPI\_Request         *request //[传出]\textcolor{red}{所请求的通信操作的句柄}，用来描述非阻塞发送或接收的完成情况。是提供给后面的非阻塞通信检测/等待函数用的。
     
@@ -1166,7 +1179,7 @@ int MPI\_Irecv(
 
     \qquad int             tag,//[传入]指定来源的消息标记，若为MPI\_ANY\_TAG表示任意标签都接受
 
-    \qquad MPI\_Comm       recv\_comm,//[传入](接收方)通信子，需要与send中的相同。通常情况下send和recv均为MPI\_COMM\_WOLRD
+    \qquad MPI\_Comm       recv\_comm,//[传入](接收方)通讯子，需要与send中的相同。通常情况下send和recv均为MPI\_COMM\_WOLRD
 
     \qquad MPI\_Status     *status,//[传出]接受状态，即指向描述已完成操作的MPI\_Status对象(结构体)的指针。如果不需要该状态信息，直接赋常量MPI\_STATUS\_IGNORE即可
 
@@ -1393,7 +1406,7 @@ int MPI\_Send\_init(
 
     \qquad int          tag,//[传入]消息标记
 
-    \qquad MPI\_Comm     comm,//[传入]目标的通信子
+    \qquad MPI\_Comm     comm,//[传入]目标的通讯子
 
     \qquad MPI\_Request  *request//[传出]所请求的通信操作的句柄，同之前
 
@@ -1422,7 +1435,7 @@ int MPI\_Recv\_init(
 
     \qquad int             tag,//[传入]指定来源的消息标记，若为MPI\_ANY\_TAG表示任意标签都接受
 
-    \qquad MPI\_Comm       recv\_comm,//[传入](接收方)通信子，需要与send中的相同。通常情况下send和recv均为MPI\_COMM\_WOLRD
+    \qquad MPI\_Comm       recv\_comm,//[传入](接收方)通讯子，需要与send中的相同。通常情况下send和recv均为MPI\_COMM\_WOLRD
 
     \qquad MPI\_Request  *request//[传出]所请求的通信对象的句柄
 
@@ -1522,9 +1535,9 @@ int MPI\_Test\_cancelled(
 
 \subsection{高维进程}
 
-通常先定义一组按顺序序号从小到大的行通信子，然后利用MPI\_Comm\_split函数对每个通信子进行拆分，从而产生列通信子，最终组成二维进程。
+通常先定义一组按顺序序号从小到大的行通讯子，然后利用MPI\_Comm\_split函数对每个通讯子进行拆分，从而产生列通讯子，最终组成二维进程。
 
-方法：在定义行通信子内将传入进程的color按一定的规律赋予不同的color值用于将进程划分给不同的通信子、以及赋予不同的key值用于指定进程在通信子内的优先级，然后利用split函数划分即可。
+方法：在定义行通讯子内将传入进程的color按一定的规律赋予不同的color值用于将进程划分给不同的通讯子、以及赋予不同的key值用于指定进程在通讯子内的优先级，然后利用split函数划分即可。
 
 \section{派生数据类型}
 
@@ -1784,7 +1797,7 @@ int MPI\_Pack(
 
     \qquad int             *position,//[传入传出]缓冲区中第一个用于打包的位置(地址偏移量)(字节)
 
-    \qquad MPI\_Comm       comm //[传入]当前通信子
+    \qquad MPI\_Comm       comm //[传入]当前通讯子
     
 );
 
@@ -1820,7 +1833,7 @@ int MPI\_Pack(
 
     \qquad MPI\_Datatype   datatype,//[传入]要解包的数据类型
 
-    \qquad MPI\_Comm       comm //[传入]当前通信子
+    \qquad MPI\_Comm       comm //[传入]当前通讯子
     
 );
 
@@ -1846,7 +1859,7 @@ int MPI\_Pack\_size(
 
     \qquad MPI\_Datatype datatype,//[传入]数据类型
 
-    \qquad MPI\_Comm     comm,//[传入]当前通信子
+    \qquad MPI\_Comm     comm,//[传入]当前通讯子
 
     \qquad int           *size//[传出]输出所需尺寸(字节)
 
@@ -1860,18 +1873,18 @@ int MPI\_Pack\_size(
 
 \section{聚合通信}
 
-与点到点通信不同，其是两个进程之间的通信。而在聚合通信下，通信子内所有的进程均参与通讯。
+与点到点通信不同，其是两个进程之间的通信。而在聚合通信下，通讯子内所有的进程均参与通讯。
 
 \subsection{障碍同步MPI\_Barrier}
 
 int MPI\_Barrier(
     
-    \qquad MPI\_Comm //[传入]进程所在通信子
+    \qquad MPI\_Comm //[传入]进程所在通讯子
     
 );
 
 \begin{itemize}
-    \item 功能：线程运行到此函数时等待，直到通信子内所有进程都运行到该函数时再一起返回，继续运行。用于将一个通信子内所有的进程同步。
+    \item 功能：线程运行到此函数时等待，直到通讯子内所有进程都运行到该函数时再一起返回，继续运行。用于将一个通讯子内所有的进程同步。
     \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
     \item 备注：无。
 \end{itemize}
@@ -1888,14 +1901,15 @@ int MPI\_Bcast(
     
     \qquad int root,//[传入]发送广播的序列号(根进程)
     
-    \qquad MPI\_Comm comm //[传入]进程所在通信子
+    \qquad MPI\_Comm comm //[传入]进程所在通讯子
     
 );
 
 \begin{itemize}
-    \item 功能：将序列号为root的进程的数据广播到通信子comm内所有进程(包括本身)。
+    \item 功能：将序列号为root的进程的数据广播到通讯子comm内所有进程(包括本身)。
     \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
     \item 备注：为阻塞式广播，全部接收后才返回。
+    \item \textcolor{red}{接收方每个进程接收的数据是完全一样的。}
 \end{itemize}
 
 \subsection{收集MPI\_Gather}
@@ -1916,12 +1930,12 @@ MPI\_Gather(
 
     \qquad int root,//[传入]聚集数据汇入的(根进程)号
 
-    \qquad MPI\_Comm communicator //[传入]进程所在通信子
+    \qquad MPI\_Comm communicator //[传入]进程所在通讯子
     
 );
 
 \begin{itemize}
-    \item 功能：将一个进程组(通信子)内所有的的发送缓冲区内参数(包括自身的)根据发送这些数据的进程的序列号将它们依次存放到自已的消息缓冲区中。
+    \item 功能：将一个进程组(通讯子)内所有的的发送缓冲区内参数(包括自身的)根据发送这些数据的进程的序列号将它们依次存放到自已的消息缓冲区中。
     \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
     \item 备注：
     
@@ -1930,8 +1944,10 @@ MPI\_Gather(
             \item 效果等同于一个组中的n个进程(包括根进程在内)都执行了一个send，同时根进程执行了n次recv。
             \item \textbf{每一个函数都包括了发送和接受部分，只不过只有根进程接收。}
             \item 每个进程都需要调用一次该函数。
-            \item 在每个进程和根进程之间，发送的数据量必须和接收的数据量相等，但发送方和接收方之间的不同数据类型映射仍然是允许的。而相似函数MPI\_Gatherv函数则允许各进程传入大小不相等的数据。
+            \item 在每个进程和根进程之间，发送的数据量必须和接收的数据量相等，但发送方和接收方之间的不同数据类型映射仍然是允许的。
             \item 是阻塞的。
+            \item MPI\_Gatherv函数：与MPI\_Gather意义相同，但多了一个int \quad *displs[]参数，其允许各进程传入大小不相等的数据。
+            \item \textcolor{red}{接收的数据是按进程顺序依次存放在root进程的接收缓冲区内的。}
             \item MPI\_Allgather函数：与MPI\_Gather意义相同，少一个root参数，但此时是所有的进程都将接收结果，而不是只有根进程接收结果。
         \end{itemize}
     }
@@ -1955,7 +1971,7 @@ int MPI\_Scatter(
                 
     \qquad int root, //[传入]发送进程的(根进程)号
     
-    \qquad MPI\_Comm comm //[传入]进程所在通信子
+    \qquad MPI\_Comm comm //[传入]进程所在通讯子
     
 );
 
@@ -1966,11 +1982,12 @@ int MPI\_Scatter(
     
     {
         \begin{itemize}
-            \item 效果等同于根进程执行了n次send操作，同时通信子内每个进程执行一次recv操作。
+            \item 效果等同于根进程执行了n次send操作，同时通讯子内每个进程执行一次recv操作。
             \item \textbf{每一个函数都包括了发送和接受部分，只不过只有根进程发送。}
             \item 每个进程都需要调用一次该函数。
             \item 发送的数据个数必须和接收的数据个数相等，但发送方和接收方之间的不同数据类型映射仍然是允许的。而相似函数MPI\_Scatterv函数则允许向各进程发送大小不相等的数据。
             \item 是阻塞的。
+            \item \textcolor{red}{与MPI\_Bcast不同，root进程发送后，每个进程接收的数据是不一样的，按顺序分别得到sendbuf的每一个元素。}
             \item MPI\_ALLGATHER：可使用MPI\_Alltoall替代。
         \end{itemize}
     }
@@ -1993,61 +2010,557 @@ int MPI\_Alltoall(
 
     \qquad MPI\_Datatype recvtype,//[传入]接收的元素类型
 
-    \qquad MPI\_Comm comm//[传出]进程所在通信子
+    \qquad MPI\_Comm comm//[传出]进程所在通讯子
     
 );
 
 \begin{itemize}
-    \item 功能：每个进程都可以向其他若干的进程按进程次序发送数据，又同时按进程次序接受其他节点的数据。
+    \item 功能：每个进程都可以向其他若干的进程按进程次序发送数据，又同时按进程次序接受其他节点的数据(均包括自身)。
     \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
     \item 备注：
     
     {
         \begin{itemize}
-            \item 每个进程发给其他进程的内容都是不同的，就是将各自发送缓冲区里的内容按序发给其他进程，\textbf{每一个进程只会发送给另一个进程一个数据、而仅从另一个进程接受一个数据}。
-            \item 
+            \item 每个进程发给其他进程的内容都是不同的，就是将各自发送缓冲区里的内容按序发给其他进程，\textcolor{red}{每一个进程只会发送给另一个进程一个元素、而仅从另一个进程接受一个元素}。
+            \item \textbf{发送元素个数n如果小于进程数，则只会将数据中的n个元素按进程号顺序发送至0到n-1个进程，同理接收}。
+            \item 相对于每个进程都执行sendcount次send，然后每个进程执行recvcount次recv。
+            \item 在每个进程和根进程之间，发送的数据量必须和接收的数据量相等，但发送方和接收方之间的不同数据类型映射仍然是允许的。
+            \item 是阻塞的。
         \end{itemize}
     }
     
 \end{itemize}
 
-\subsubsection{函数}
+\section{规约操作}
+
+指的是这种函数调用一次，则在该通讯子内\textcolor{red}{所有的}进程都安装运算的要求来操作。使用者可以不考虑这方面的并行实现，直接调用函数即可。
+
+\textcolor{red}{相当于一个函数同时完成了对各个进程参数的收集并计算，以及将结果输出回线程。避免了先收集再统一计算再返回的并行问题}。
+
+\subsection{规约}
+
+\subsubsection{规约MPI\_Reduce}
+
+int MPI\_Reduce(
+    
+    \qquad void* sendbuf, //[传入]发送的消息起始地址
+    
+    \qquad void* recvbuf, //[传出]接收消息的起始地址
+
+    \qquad int count,//[传入]发送的消息数据个数
+
+    \qquad MPI\_Datatype datatype,//[传入]发送消息的数据类型 
+
+    \qquad MPI\_Op op, //[传入]归约操作符(句柄)
+
+    \qquad int root,//[传入]接收消息的(根进程)序列号
+
+    \qquad MPI\_Comm comm //[传入]当前进程通讯子
+    
+);
 
 \begin{itemize}
-    \item 功能：
+    \item 功能：将组内每个进程输入缓冲区中的数据直接按op操作组合起来,并将其结果返回到序列号为root的进程的输出缓冲区中。
     \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
     \item 备注：
+    
+    {
+        \begin{itemize}
+            \item 每个进程都需要调用该函数，所有组成员都用同样的参数count、datatype、op、root和comm来调用此函数，其所提供的所有进程的输入和输出缓冲区都满足长度相同、元素类型相同。
+            \item 注意个数是指每个进程内上传的，而非总的，\textcolor{red}{个数是几就进行几次op操作}。
+            \item 发送消息的数据类型不一定要与输入的数据相同，但必须和op操作函数匹配，而输出会与定义的类型相同。
+            \item 是阻塞的。
+            \item 用户也可以定义自己的作用于几种数据类型的操作(op)，即可以是基本的也可以是派生的。
+            \item 操作op始终满足结合律，且所有MPI定义的操作满足交换律，而用户自定义的操作是不满足交换律的。\textbf{(区别在于满足交换律，则在规约计算时计算顺序可以变，而非固定地按进程序列号升序方式进行,即从序列号为0的进程开始)}
+        \end{itemize}
+    }
 \end{itemize}
 
-\subsubsection{函数}
+\subsubsection{规约广播MPI\_Allreduce}
+
+int MPI\_Alleduce(
+
+    \qquad void *input\_data, //[传入]发送的消息起始地址
+
+    \qquad void *output\_data, //[传出]接收消息的起始地址
+
+    \qquad int count,//[传入]发送的消息数据个数
+
+    \qquad MPI\_Datatype datatype,//[传入]数据类型
+
+    \qquad MPI\_Op operator,//[传入]规约操作函数
+
+    \qquad MPI\_Comm comm //[传入]当前进程通讯子
+    
+);
 
 \begin{itemize}
-    \item 功能：
+    \item 功能：类似于MPI\_Reduce，但所有进程均\textbf{接收相同的信息}而不止root进程。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：等价于先进行一次规约操作再进行一次广播。
+\end{itemize}
+
+\subsubsection{前缀扫描MPI\_Scan}
+
+int MPI\_Scan(
+
+    \qquad void* sendbuf, //[传入]发送的消息起始地址
+
+    \qquad void* recvbuf, //[传出]接收消息的起始地址
+
+    \qquad int count,//[传入]发送的消息数据个数
+
+    \qquad MPI\_Datatype datatype,//[传入]数据类型
+
+    \qquad MPI\_Op op,//[传入]规约操作函数
+
+    \qquad MPI\_Comm comm //[传入]当前进程通讯子
+    
+);
+
+\begin{itemize}
+    \item 功能：类似于MPI\_Reduce，但所有进程均接收信息而不止root进程。
     \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
     \item 备注：
+    
+    {
+        \begin{itemize}
+            \item 常用于对分布于组中的数据作前置归约操作。
+            \item 与MPI\_Allreduce不同，对于第i个线程，其接收的结果为序号小于等于i的线程上传的数据之和，即进程号越大，参与op运算的数据就越多。
+            \item MPI的归约和扫描操作允许每个进程贡献向量值，而不只是标量值。
+        \end{itemize}
+    }
+
 \end{itemize}
 
+\subsubsection{规约散播MPI\_Reduce\_scatter}
 
+int MPI\_Reduce\_scatter(
+    
+    \qquad void* sendbuf, //[传入]发送的消息起始地址
 
+    \qquad void* recvbuf,//[传出]接收消息的起始地址
 
+    \qquad int *recvcounts,//[传入]整数数组，各进程接收规约结果的元素个数。\textbf{所有进程的该数组都必须相同}
 
+    \qquad MPI\_Datatype datatype, //[传入]数据类型
 
+    \qquad MPI\_Op op, //[传入]规约操作函数
 
-
-
-
-
-
+    \qquad MPI\_Comm comm //[传入]当前进程通讯子
+    
+);
 
 \begin{itemize}
-    \item 
+    \item 功能：将各个线程的发送缓冲区值聚集起来，完成op之后，按recvcounts将结果返回给各线程。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：
+    
+    {
+        \begin{itemize}
+            \item 与MPI\_Alleduce不同之处在于，对于op输出的结果，操作的结果被按通讯子中进程的数量切割成i个\textbf{不重叠}的部分，第i个部分被发送到其接收缓冲区中的第i个进程。
+            \item \textcolor{red}{每个线程读取的元素个数为recvcounts[i]，计算得到的结果个数则为$max\{recvcounts[i]\}$，并将结果依据recvcounts[i]分割并按序列号顺序分配至各线程。}
+            \item 一共进行$max\{recvcounts[i]\}$次op操作，对于第recvcounts[i]个的op操作，如果某个线程不含对应输入缓冲区的参数，则不纳入op计算中。
+            \item 等价于：一个MPI\_Reduce操作，后面跟一个MPI\_Scatterv操作,但直接实现运行得更快一些。
+        \end{itemize}
+    }
 \end{itemize}
 
+\subsection{运算种类与可用数据类型}
 
+\subsubsection{MPI定义的归约操作函数}
 
+\begin{tabular}{l c c c r}
+        名字         &       含义            &   允许数据类型        \\
+        MPI\_MAX     &      最大值           &   C整数、浮点数       \\  
+        MPI\_MIN     &      最小值           &   C整数、浮点数       \\
+        MPI\_SUM     &      求和             &   C整数、浮点数、复数 \\
+        MPI\_PROD    &      求积             &   C整数、浮点数、复数 \\
+        MPI\_LAND    &      逻辑与           &   C整数、逻辑型       \\
+        MPI\_BAND    &      按位与           &   C整数、逻辑型       \\
+        MPI\_LOR     &      逻辑或           &   C整数、逻辑型       \\
+        MPI\_BOR     &      按位或           &   C整数、逻辑型       \\
+        MPI\_LXOR    &      逻辑异或         &   C整数、逻辑型       \\
+        MPI\_BXOR    &      按位异或         &   C整数、逻辑型       \\
+        MPI\_MAXLOC  &      最大值且相应位置  &   复合数据类型        \\
+        MPI\_MINLOC  &      最小值且相应位置  &   复合数据类型        \\
+    
+\end{tabular}
 
+\paragraph{基本数据类型组参考}~{}
 
+\begin{figure}[htb!]%插入图片
+    \includegraphics[width=0.9\textwidth]{8-1.png}
+\end{figure}
 
+\subsubsection{复合数据类型}
 
+针对op操作中的MPI\_MINLOC操作符和MPI\_MAXLOC操作符对应的数据类型。
+
+MPI\_MINLOC操作符用于计算全局最小值和这个最小值的索引号；
+
+MPI\_MAXLOC操作符用于计算全局最大值和这个最大值的索引号；
+
+与规约函数一起使用，可计算一个全局最小值(最大值)和这个值所在的进程序列号。
+
+\paragraph{数据类型特点：}~{}
+
+\begin{itemize}
+    \item 其数据类型为两个数的组合$(w,k)$，前者为值，后者为值所在进程序号；
+    \item 在MPI\_MINLOC的情况下，如果存在最小值相等的情况，则k取进程序号的最小值；
+    \item 在MPI\_MAXLOC的情况下，如果存在最大值相等的情况，则k取进程序号的最小值；
+    \item 传入规约函数(即给op函数)的数据类型也应该是复合数据类型；
+    \item 传入的数据也应该满足第一个值为要比较的值第二个为进程序号，类型为二维数组结构体皆可，传出也是写到类似的数据结构中，\textbf{传入传出缓冲区不要求为复合数据类型}。
+\end{itemize}
+
+\paragraph{复合数据类型分类}~{}
+
+\begin{tabular}{l c c c r}
+    名字                    &     描述                    \\
+    MPI\_FLOAT\_INT         &     浮点型和整型            \\
+    MPI\_DOUBLE\_INT        &     双精度和整型            \\
+    MPI\_LONG\_INT          &     长整型和整型            \\
+    MPI\_2INT               &     整型值对                \\
+    MPI\_SHORT\_INT         &     短整型和整型            \\
+    MPI\_LONG\_DOUBLE\_INT  &     长双精度浮点型和整型     \\
+
+\end{tabular}
+
+\subsubsection{自定义规约操作函数}
+
+\paragraph{MPI\_Op\_create函数}~{}
+
+int MPI\_Op\_create(
+    
+    \qquad MPI\_User\_function *function,//[传入]用户自定义的函数(函数)
+
+    \qquad int commute,//[传入]可交换属性，是则为true,否则为false
+
+    \qquad MPI\_Op *op //[传出]操作名
+    
+);
+
+\begin{itemize}
+    \item 功能：将用户自定义的操作和op绑定在一起，从而可以被规约函数调用。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：
+    
+    {
+        \begin{itemize}
+            \item 可以用于8.1的规约函数中。
+            \item 默认是满足结合律的，交换律根据commute属性确定。
+        \end{itemize}
+    }
+
+\end{itemize}
+
+\paragraph{用户自定义规约操作函数的描述方法：}~{}
+
+typedef void MPI\_User\_function(
+    
+    \qquad void *invec, //[传入]传入函数的数组数据，要操作的数据，每一个值来自不同的进程
+
+    \qquad void *inoutvec,//[传出]输出的数据数组，如果返回每一个进程按进程号元素依次返回
+
+    \qquad int *len, //[传入]是传入传出数据数组的大小，一般等于进程数目
+
+    \qquad MPI\_Datatype *datatype,//[传入]数据类型
+  
+);
+
+\begin{itemize}
+    \item 必须具备四个参数: invec, inoutvec, len和datatype。
+    \item 也可以对inoutvec传入数据并计算，至少其在函数输出时会被覆盖。
+\end{itemize}
+
+\paragraph{MPI\_Op\_free函数}~{}
+
+int MPI\_op\_free(
+    
+    \qquad MPI\_Op *op//[传入]用户自定义的归约操作
+    
+);
+
+\begin{itemize}
+    \item 功能：将用户自定义的归约操作撤消。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：自定义操作完毕后最好调用撤销。
+\end{itemize}
+
+\section{组操作}
+
+类似于数学中的集合计算，通过对组进行一系列操作，达到构建不同用途的通讯子的目的(通讯子操作比较难做到)。
+
+\subsection{进程组创建}
+
+\subsubsection{MPI\_Comm\_group函数}
+
+int MPI\_comm\_group(
+
+    \qquad MPI\_Comm  comm,//[传入]组所基于的通讯子
+
+    \qquad MPI\_Group *group //[传出]通讯子对应的组(句柄)
+
+);
+
+\begin{itemize}
+    \item 功能：用来建立一个通信子对应的新进程组(句柄)，之后就可以对此进程组进行需要的操作组。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：
+    
+    {
+        \begin{itemize}
+            \item 本地操作。不依赖其他进程。
+            \item 不同的进程可以定义不同的组。一个进程可以定义不包含自身的组，下同。
+            \item 不提供从头开始构建组的机制，必须从现有组构建组。\textcolor{red}{定义所有其他组的基础组是与初始通讯子MPI\_COMM\_WORLD关联的组}，下同。
+        \end{itemize}
+    }
+\end{itemize}
+
+\subsubsection{MPI\_Group\_union函数}
+
+int MPI\_Group\_union(
+
+    \qquad MPI\_Group group1,//[传入]已有的组1
+
+    \qquad MPI\_Group group2,//[传入]已有的组2
+
+    \qquad MPI\_Group *newgroup //[传出]新的组
+
+);
+
+\begin{itemize}
+    \item 功能：从两个现有组的并集创建新组。(全算上)
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：\textbf{次序是第二组跟在第一组后面}。
+\end{itemize}
+
+\subsubsection{MPI\_Group\_intersection函数}
+
+int MPI\_Group\_intersection(
+
+    \qquad group1,//[传入]已有的组1
+
+    \qquad MPI\_Group group2,//[传入]已有的组2
+
+    \qquad MPI\_Group *newgroup //[传出]新的组
+
+);
+
+\begin{itemize}
+    \item 功能：从两个现有组的交集创建新组。(共同的)
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：\textbf{次序是交集中元素次序同第一组。}
+\end{itemize}
+
+\subsubsection{MPI\_Group\_difference函数}
+
+MPI\_Group\_difference(
+
+    \qquad group1,//[传入]已有的组1
+
+    \qquad MPI\_Group group2,//[传入]已有的组2
+
+    \qquad MPI\_Group *newgroup //[传出]新的组
+    
+);
+
+\begin{itemize}
+    \item 功能：从两个现有组的差集创建新组。\textbf{(在第一组但不在第二组中的所有元素)}
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：\textbf{差集中的元素次序同第一组。}
+\end{itemize}
+
+\subsubsection{MPI\_Group\_incl函数}
+
+int MPI\_Group\_incl(
+
+    \qquad MPI\_Group   group,//[传入]已有的组
+
+    \qquad int          n,//[传入]进程组组中选取的进程数目
+
+    \qquad int          *ranks,//[传入]将在新进程组中出现的旧进程组中的编号
+
+    \qquad MPI\_Group   *newgroup //[传出]由ranks定义的顺序导出的新进程组
+
+);
+
+\begin{itemize}
+    \item 功能：从一个已有的进程组中，选择一部分进程导出新的进程组。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：新进程组中进程的次序来源于老进程组中的次序。
+\end{itemize}
+
+\subsubsection{MPI\_Group\_excl函数}
+
+int MPI\_Group\_excl(
+
+    \qquad MPI\_Group    group,//[传入]已有的组
+
+    \qquad int          n,//[传入]进程组组中剔除的进程数目
+
+    \qquad int          *ranks,//[传入]在新进程组中不出现的旧进程组中的编号
+
+    \qquad MPI\_Group   *newgroup//[传出]旧进程组中不在ranks里的元素组成的新进程组
+
+);
+
+\begin{itemize}
+    \item 功能：从一个已有的进程组中，剔除一部分进程剩余进程组成的新的进程组。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：次序来源于老进程组。
+\end{itemize}
+
+\subsubsection{MPI\_Group\_range\_incl函数}
+
+int MPI\_Group\_range\_incl(
+
+    \qquad MPI\_Group   group,//[传入]已有的组
+
+    \qquad int          n,//[传入]进程组中选取的三元组数数目
+
+    \qquad int          ranges[][3],//[传入]将在新进程组中出现的旧进程组中的编号
+
+    \qquad MPI\_Group   *newgroup //[传出]由ranks定义的顺序导出的新进程组
+
+);
+
+\begin{itemize}
+    \item 功能：类似于MPI\_Group\_incl函数，但在选取时是根据三元组数来选取的。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：
+    
+    {
+        \begin{itemize}
+            \item 三元组整体：二维数组，可视为若干个大小为3的一维数组，每个一维数组格式为$first_i,last_i,stride_i$。分别表示起始进程序号，结束进程序号，步长(分割块数)。
+            \item 共计选取n个这样的三元组，则抽取的进程序号为：
+            
+            $first_i,first_i+j*\frac{last_i-first_i}{stride_i},(0<j<=stride_i),last_i,(0<=i<n)$
+
+            共计$\sum_{i=0}^{i<n}(stride_i+1)$个数据。
+
+            \item 注意选取的进程序号不能重复，否则报错。
+            \item 步长可以为负数，相对应的$first_i<last_i$。
+        \end{itemize}
+        
+    }
+\end{itemize}
+
+\subsubsection{MPI\_Group\_range\_excl函数}
+
+int MPI\_Group\_range\_excl(
+
+    \qquad MPI\_Group    group,//[传入]已有的组
+
+    \qquad int          n,//[传入]进程组组中剔除的三元组数目
+
+    \qquad int          *ranges[][3],//[传入]在新进程组中不出现的旧进程组中的编号
+
+    \qquad MPI\_Group   *newgroup//[传出]旧进程组中不在ranks里的元素组成的新进程组
+
+);
+
+\begin{itemize}
+    \item 功能：类似于MPI\_Group\_excl函数，但在剔除时是按照三元组的规律来剔除的。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：参考MPI\_Group\_range\_incl的三元组相关。
+\end{itemize}
+
+\subsection{进程组管理}
+
+\subsubsection{MPI\_Group\_size函数}
+
+int MPI\_Group\_size(
+    
+    \qquad MPI\_Group group,//[传入]要判断大小的组
+
+    \qquad int       *size //[传出]进程数目
+
+);
+
+\begin{itemize}
+    \item 功能：得到组内进程的数目。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：无。
+\end{itemize}
+
+\subsubsection{MPI\_Group\_rank函数}
+
+int MPI\_Group\_rank(
+
+    \qquad MPI\_Group group,//[传入]要获得序号的所在组的名字
+
+    \qquad int        *rank//[传出]进程序号
+
+);
+
+\begin{itemize}
+    \item 功能：获得当前进程在指定进程组内的进程序号。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：当前进程需要在组内。如果进程不是进程组中的成员，则返回值RANK为MPI\_UNDEFINED
+\end{itemize}
+
+\subsubsection{MPI\_Group\_translate\_ranks函数}
+
+int MPI\_Group\_translate\_ranks(
+
+    \qquad MPI\_Group         group1,//[传入]进程组1
+
+    \qquad int                n,//[传入]要查询的进程的个数
+
+    \qquad int                *ranks1,//[传入]进程组1中有效编号组成的数组
+
+    \qquad MPI\_Group         group2,//[传入]进程组2
+
+    \qquad int                *ranks2 //[传出]ranks1中的元素在进程组2中的对应编号
+
+);
+
+\begin{itemize}
+    \item 功能：在已知若干个进程在进程组1中的序号，通过此函数确定相同的进程在进程组2中的序号。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：如果这个进程不属于进程组2，则在ranks2中对应ranks1的位置返回值为MPI\_UNDEFINED。
+\end{itemize}
+
+\subsubsection{MPI\_Group\_free函数}
+
+int MPI\_Group\_free(
+
+   MPI\_Group *group//[传入]派生的组
+
+);
+
+\begin{itemize}
+    \item 功能：释放一个定义的进程组。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：无。
+\end{itemize}
+
+\subsubsection{MPI\_Group\_compare函数}
+
+int MPI\_Group\_compare(
+    \qquad MPI\_Group group1,//[传入]进程组1
+
+    \qquad MPI\_Group group2,//[传入]进程组2
+
+    \qquad int        *result//[传出]比较结果
+
+);
+
+\begin{itemize}
+    \item 功能：比较两个组的成员特性。
+    \item 返回值：成功时返回MPI\_SUCCESS，否则返回错误代码。
+    \item 备注：result的值：
+    
+    {
+        \begin{itemize}
+            \item MPI\_IDENT：两个通讯子具有同样的进程组(各进程组的组成员和序列号次序都相同)和相同的上下文，即为同一对象的句柄；
+            \item MPI\_CONGRUENT：两个通讯子具有同样的进程组，但上下文不相同；
+            \item MPI\_SIMILAR：两个通讯子的组成员相同但序列号次序不同；
+            \item MPI\_UNEQUAL：两个通讯子组成员也不相同。
+        \end{itemize}
+    }
+
+\end{itemize}
 
 \end{document}%文章结束
