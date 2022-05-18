@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021/W32TeX) (preloaded format=xelatex 2022.3.2)  18 MAY 2022 21:10
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021/W32TeX) (preloaded format=xelatex 2022.3.2)  18 MAY 2022 21:50
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -574,19 +574,13 @@ Overfull \hbox (8.40987pt too wide) in paragraph at lines 1988--1989
 File: 8-1.png Graphic file (type bmp)
 <8-1.png>
  [60] [61] [62] [63] [64] [65] [66] [67] [68] (./note.aux)
-
-Package rerunfilecheck Warning: File `note.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `note.out':
-(rerunfilecheck)             Before: 9220B32FD444B78916B9833B06F29042;16981
-(rerunfilecheck)             After:  C7A92488176C7C11898E7A839CD91894;17063.
+Package rerunfilecheck Info: File `note.out' has not changed.
+(rerunfilecheck)             Checksum: C7A92488176C7C11898E7A839CD91894;17063.
  ) 
 Here is how much of TeX's memory you used:
  14694 strings out of 478866
  319246 string characters out of 5862826
- 663049 words of memory out of 5000000
+ 663126 words of memory out of 5000000
  34324 multiletter control sequences out of 15000+600000
  411474 words of font info for 83 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
