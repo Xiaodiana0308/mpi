@@ -1,0 +1,43 @@
+\begin{itemize}
+    \item 采样：
+    
+    利用狄拉克函数的性质：
+
+    $\int_{-\infty}^{\infty} \delta (t-t_0)f(t) \,dx=f(t_0)$
+
+    能够筛选出f(t)在$t_0$时刻的函数值$f(t)$，从而采样$t_0$点，记采样周期为$T_s$，并认为采样附近函数值相等，则f(t)可近似为：
+
+    $f_s=\sum_{n=-\infty}^{\infty}f(t)\delta (t-nT_s) $
+
+    \item 时域离散化：
+    
+    对采样结果进行傅里叶变换，使时域为无限大求和形式，即：
+
+    $F(\omega )=\sum_{n=-\infty}^{\infty}f(nT_s)e^{-i\omega nT_s}$
+    
+    \textbf{即每一个$\omega $点的值$F(\omega)$都是由无数个取样点的和组成，且只能得到指定位置的点的值($k\omega$)。}
+
+    \item 频域离散化：
+    
+    选取有限的N个时刻T，采样间隔同为$T_s$，求和只求范围内的，则可求的k个点的F值为：
+    
+    $F[k]=\frac{1}{N} \sum_{n=0}^{N-1} f[n] e^{-i \frac{2 \pi}{N} k n}$\qquad k=0,1,2,...,N-1(表示取样点)
+
+    \textcolor{red}{其中$F[k]=F(k\omega_0)T_s=F(\omega_k)T_s$表示频域，}
+    
+    \textcolor{red}{$f[n]=f(nT_s)=f(t_n)$表示时域。}
+
+    即得到频谱函数$F[k]$，表示的是$k\omega_0$时刻信号幅值大小。
+
+    \item 替代：取样点总数N->n,当前取样点数n->j,复数标志j->i。得：
+
+    $F[k]=\frac{1}{n} \sum_{j=0}^{n-1} f[j] e^{- \frac{2 \pi i j k}{n}}$\qquad k=0,1,2,...,n-1
+    
+    记$y_k=F(\omega_k)*nT_s$，$x_j=f(t_j)$，则上式可以化为：
+
+    \textcolor{red}{$y_k=\sum_{j=0}^{n-1} x_j e^{- i \frac{2 \pi j k }{n}}$\qquad k=0,1,...,n-1}
+
+    \textbf{k是大循环，j是小循环。}
+
+    \item 注意：该方法的时间复杂度为$\varTheta(n^2)$。
+\end{itemize}

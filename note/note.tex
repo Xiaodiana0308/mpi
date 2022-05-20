@@ -261,7 +261,7 @@ $
 
     $v_{p-2}=u_{i+p-1}-a_{i+p-1}*x_k$ , 类似于j=p-2(改成p-1?)
 
-    \textbf{j在这里指的是每一个i下，对应的行数，随i的变化v向量不断更新。}
+    \textbf{j在这里指的是每一个i下，对应的行数(范围0到p-1)，随i的变化v向量不断更新。}
 
     \item 向下一线程发送v向量$v_{send}$。
     \item 更新[i+p,u-1]行范围内的u向量：
@@ -270,18 +270,21 @@ $
 
     \item k=K+1。
     \item 继续循环i，最终完成全部求解。\textcolor{red}{每次循环只处理一列！！}
-    \item 注意：{
-        \begin{itemize}
-            \item \textcolor{red}{v用于将本线程的计算结果对接下来的方程的影响传递给其他线程。大小取决于线程总数目。每次循环时都会变化，由新计算出的解来更新。}
-            \item 其每次循环计算P次，恰好到下一个本线程之前。
-            \item 注意在v的更新中，更新后的$v_0$指的是当前的k对应的k+1行，即迭代更新。但注意其中u(old)的更新同样采用了迭代的方法，在继承下一行$v_j$的同时，有引入了当前线程的u，而最下行的v则\textcolor{red}{并没有添加新的u}，也就是说\textcolor{red}{在下次循环到本线程时，v向量所有的u都不是本线程的了}，因此在下一次循环到本线程时，计算x时仍然需要加u。（但这样设计是因为v大小只为一个循环的，只能考虑这么多的$a_i*x_i$计算，到下一个循环时需要重新计算$a_{i+p}*x_{i+p}$）
-            只含有当前线程计算的全部结果对方程的影响。因此在下一个线程接收到这个数据时，\textcolor{red}{并不包括本线程之前的所得解的影响}，因此在x计算公式中可以看到，加上了本线程储存的u(new，用上次计算出的x更新过)。
-            \item \textcolor{red}{u表示未计算的所有行方程$d+bx=c-a$中的c-a项，每次计算出一个$x_{k-1}$值后，就会对u进行更新，未解行i的方程（之后的方程）全部减去$x_{k-1}*a_{ik}$}。
-            \item u在初始情况下即第一个线程时被初始赋值为b，即为方程右值。
-            \item \textcolor{red}{u仅用于标记线程内部所得解对c-a的影响，外部影响必须全部通过传递的v得到。}
-        \end{itemize}
-    }
+\end{itemize}    
+
+\paragraph{u数组与v数组的理解}~{}
+
+\begin{itemize}
+    \item v数组在线程间传递，用于将\textcolor{red}{本线程的计算结果对接下来的方程的影响(本次+之前所有的)传递}给其他线程。\textbf{也就是说是其他线程的解对求解方程的影响}。
+    \item v数组的大小等于线程总数目；每次循环时都会变化，覆盖的列向未知数区域移动，每次移动一行。\textcolor{red}{即每次由本向量结果新得到一个v，舍弃一个v，剩下的v向下平移并考虑本线程的影响}。
+    \item 注意：\textcolor{red}{在v的更新中，更新后的$v_0$指的是当前的k对应的k+1行}。而最新产生的v并不会考虑其他线程的影响，则\textcolor{red}{在下次循环到本线程时，本线程的影响就会消失}，因此在下一次循环到本线程时，计算x时需要考虑本线程的影响即u。
+    
+    (没有必要每次传完所有的影响$a_{i,j}*x_i$，浪费性能)
+
+    \item u在本线程内使用，用于本地保存\textcolor{red}{本线程已计算出的解($x_0$、\dots、$x_k$)所对应的$b_i-\sum_{i=0}^{i=k} x_i*a_{i,j}$}，也就是本线程的解对求解方程的影响。
+    \item u在初始情况下即第一个线程时被初始赋值为b，即为方程右值。
 \end{itemize}
+
 
 \subsection{迭代解法}
 
@@ -330,52 +333,37 @@ $
 
 对于连续的傅里叶变换，已知：
 
-$F(f)=\int_{-\infty}^{+\infty} f(t) e^{-j 2 \pi f t} d t$
+$F(\omega)=\int_{-\infty}^{+\infty} f(t) e^{- i \omega t} d t$
 
-其目的是得到信号的频谱密度函数(t->w(f))，DFT就是t和f都为离散版的傅里叶变换。
+DFT的目的是得到信号的频谱密度函数($t->\omega$)，DFT就是$\omega$和t都为离散版的傅里叶变换。
 
-由于计算机也只可能计算出有限个频率上对应的幅值密度，因此最终也需要转为离散的情况。转化步骤：
+由于计算机也只可能计算出有限个频率上对应的幅值密度，因此最终也需要转为离散的情况。
+
+\paragraph{基本原理：}~{}
 
 \begin{itemize}
-    \item 采样：
+    \item 时域$t$的离散化：
     
-    利用狄拉克函数的性质：
+    由于计算机计算中时域不可能是连续的，则将其离散化，变为无限个时刻点，每个时刻点间隔为$T_s$：
 
-    $\int_{-\infty}^{\infty} \delta (t-t_0)f(t) \,dx=f(t_0)$
-
-    能够筛选出f(t)在$t_0$时刻的函数值$f(t)$)，从而采样$t_0$点，记采样周期为$T_s$，并认为采样附近函数值相等，则f(t)可近似为：
-
-    $f_s=\sum_{n=-\infty}^{\infty}f(t)\delta (t-nT_s) $
-
-    \item 时域离散化：
+    $F(\omega )=\sum_{j=-\infty}^{\infty}[f(jT_s)e^{-i\omega jT_s}T_s]$
     
-    对采样结果进行傅里叶变换，使时域为无限大求和形式，即：
+    实际上k是有限个的，由于$e^{-i\omega t}$是以$2\pi$为周期的连续函数，则可以把$2\pi$分为n份，在其中均匀的取样，同时对时间间隔归一化($T_s=1$)，则有：
 
-    $F(\omega )=\sum_{n=-\infty}^{\infty}f(nT_s)e^{-j\omega nT_s}$
+    $F(\omega )=\sum_{j=0}^{n-1}f(j)e^{-i \frac{2 \pi j \omega }{n}}$
+
+    \item 频域$\omega$离散化：
     
-    \textbf{即每一个$\omega $点的值$F(\omega)$都是由无数个取样点的和组成，且只能得到指定位置的点的值($k\omega$)。}
-
-    \item 频域离散化：
+    对于n个采样点，可知最多能求解的$\omega$点对应的$F(\omega)$函数值同样为n个，即对$\omega$进行离散化，将上式变成n个方程：
     
-    选取有限的N个时刻T，采样间隔同为$T_s$，求和只求范围内的，则可求的k个点的F值为：
+    $F(\omega k )=\sum_{j=0}^{n-1}f(j)e^{-i \frac{2 \pi j k \omega }{n}},\quad k=0,1,\dots,n-1$
+
     
-    $F[k]=\frac{1}{N} \sum_{n=0}^{N-1} f[n] e^{-j \frac{2 \pi}{N} k n}$\qquad k=0,1,2,...,N-1(表示取样点)
+    记$y_k=F(\omega k)$，$x_j=f(j)$，对$\omega$同样进行归一化，则上式可以化为：
 
-    \textcolor{red}{其中$F[k]=F(k\omega_0)T_s=F(\omega_k)T_s$表示频域，}
-    
-    \textcolor{red}{$f[n]=f(nT_s)=f(t_n)$表示时域。}
+    \textcolor{red}{$y_k=\sum_{j=0}^{n-1} x_j e^{- i \frac{2 \pi j k }{n}}\quad k=0,1,...,n-1$}
 
-    即得到频谱函数$F[k]$，表示的是$k\omega_0$时刻信号幅值大小。
-
-    \item 替代：取样点总数N->n,当前取样点数n->j,复数标志j->i。得：
-
-    $F[k]=\frac{1}{n} \sum_{j=0}^{n-1} f[j] e^{- \frac{2 \pi i j k}{n}}$\qquad k=0,1,2,...,n-1
-    
-    记\textcolor{red}{$y_k=F(\omega_k)*nT_s$，$x_j=f(t_j)$}，则上式可以化为：
-
-    $y_k=\sum_{j=0}^{n-1} x_j e^{- \frac{2 \pi i j k }{n}}$\qquad k=0,1,...,n-1
-
-    \textcolor{red}{k是大循环，j是小循环。}
+    \textbf{k是大循环，j是小循环。}
 
     \item 注意：该方法的时间复杂度为$\varTheta(n^2)$。
 \end{itemize}
@@ -384,12 +372,12 @@ $F(f)=\int_{-\infty}^{+\infty} f(t) e^{-j 2 \pi f t} d t$
 
 用于在DFT的基础上，减少其复杂度。
 
-基本原理：
+\paragraph{基本原理：}
 
 \begin{itemize}
-    \item 记$\omega (n)=e^{-\frac{2 \pi i}{n}}$，则$\omega (n)^k$为方程$x^n=1$的第k根。上式化为：
+    \item 记$\omega (n)=e^{- i \frac{2 \pi }{n}}$，则$\omega (n)^k$恰好为方程$x^n=1$的第k根。上式化为：
     
-    $y_k=\sum_{j=0}^{n-1} x_j \omega (n)^{kj}$\qquad k=0,1,...,n-1
+    \textcolor{red}{$y_k=\sum_{j=0}^{n-1} x_j \omega (n)^{kj}\quad k=0,1,...,n-1$}
 
     \item 同样有性质成立：
     
@@ -436,7 +424,7 @@ $F(f)=\int_{-\infty}^{+\infty} f(t) e^{-j 2 \pi f t} d t$
     y_{k+m}=G(x^2)-xH(x^2)
     \end{array}\right.$
 
-    \textcolor{red}{注意其中的x实际上指的是$\omega(m)$，而非前式的x。}
+    \textcolor{red}{注意其中的x实际上指的是$\omega(n)$，而非前式的x。}
     
     也就是说，只要能够得到$y_k$，就一定能够得到$y_{k+m}$。因为每一个m、k下，H和G总是相等的。
 
@@ -445,12 +433,11 @@ $F(f)=\int_{-\infty}^{+\infty} f(t) e^{-j 2 \pi f t} d t$
     完整的分治过程\textcolor{red}{不仅包括利用k+m与k的关系不断对方程组进行减半的拆分，还包括对方程内的不同指数的项按奇偶进行拆分}。
     
     对于n=2m的划分可以一直进行下去，但由于每一次方程数目减半，方程内也需要继续进行划分以减少系数，同时每一行y的表达式增加，直到最简单的形式：\textcolor{red}{H和G中不含有x即$y=G+xH$}。
-    
-    使n=n/2,m=n/2。只对$y_k$处理，然后对G和H分别建立方程$y_{k'}=G(x^2),\quad y_{k''}=H(x^2)$，有$y_{k'}+y_{k''}=y_k$。\textcolor{red}{由于G和H在形式上是完全一样的}，因此处理步骤相同。以$y_{k'}$为例，使用$x$替代$x^2$(利用性质1恰好使上一步的$\omega(m)$中的m减小一半，对应新的m)，然后就可以按照前文的步骤，将奇部取出x，即$y_{k'}=G'(x^2)+xH'(x^2)$。然后以此类推。
 
-    \item 复杂度：由于对于个点n而言，一共需要在$n^{0.5}$个位置建立方程求解(m对应的位置才需要)，而每一次需要进行n次乘法(x与$\omega$相乘)，因此总的复杂度量级为$nlog_2(n)$。
+    \item 复杂度：由于对于个点n而言，一共需要在$log_2(n)$个位置建立方程求解(m对应的位置才需要)，而每一次需要进行n次乘法(x与$\omega$相乘)，因此总的复杂度量级为$nlog_2(n)$。
     \item 注意：方程数目或多项式系数+1必须为$2^n$次方，否则需要补零。
     \item 注意：可见求解中需要计算全部的$\omega(m)^{kj}$，m=2,4,...,n/2、k=0,1,...,n-1。但利用性质1，k计算到n/2-1就可以了。
+    \item 注意对于n下的方程，\textcolor{red}{实际上只有单独的x部分是n的，H(x)和G(x)对于的全是m}。
 \end{itemize}
 
 \subsection{多项式乘法与FFT}
@@ -471,18 +458,27 @@ IDFT：把一个多项式的点值表示法转化为系数表示法的过程。
 
 在点值表示法下，单纯的多项式相乘复杂度为$n$，因为在向量乘中，$x_k$保持不变，而仅仅需要将各项$f(x_i)$和$g(x_i)$相乘。
 
-对于DFT和IDFT过程，复杂度则取决于这两个转化过程：$y_i=a_0+a_1*x_i+a_2*x_i^2+...+a_n*x_i^n$方程组，已知A和X向量，求解Y；已知Y和X向量，求解系数向量A。最适合带入的X的值即为方程$x^n=1$的根，$\omega_n^k、k=0,1,..,n-1$。由于每个方程系数是一样的，这样就可以利用之前复数的周期性质，减少乘的数量，快速转化。复杂度同FFT算法，为$nlog_2n$量级。
+对于DFT和IDFT过程，复杂度则取决于这两个转化过程，对于$y_i=a_0+a_1*x_i+a_2*x_i^2+...+a_n*x_i^n$方程组：
+
+\begin{itemize}
+    \item 已知A和X向量，求解Y；
+    \item 已知Y和X向量，求解系数向量A；
+\end{itemize}
+
+最适合带入的X的值即为方程$x^n=1$的根，$\omega_n^k,k=0,1,..,n-1$。由于每个方程系数是一样的，这样就可以利用之前复数的周期性质，减少乘的数量，快速转化。
+
+复杂度同FFT算法，为$nlog_2(n)$量级。
 
 带入x，对于第k行方程，表示为：
 
-$y_k=\sum_{j = 0}^{n-1} a_jx_k^j = \sum_{j = 0}^{n-1} a_j(\omega_n^k)^j$\qquad k=0,1,...,n-1
+$y_k=\sum_{j = 0}^{n-1} a_jx_k^j = \sum_{j = 0}^{n-1} a_j(\omega_n^k)^j \quad k=0,1,...,n-1$
 
-参考FFT基本式： $y_k=\sum_{j=0}^{n-1} x_j \omega (n)^{kj}$\qquad k=0,1,...,n-1
+参考FFT基本式： $y_k=\sum_{j=0}^{n-1} x_j \omega (n)^{kj} \quad k=0,1,...,n-1$
 
 则若视$a_j$为$x_j$，则两式完全相等。可以采用同样的方法进行化简。
 
 
-编写程序时注意($e^{\theta i}=cos(\theta)+isin(\theta)$)：对于$\omega_n^k=e^{-{2\pi i k}/n}$，在传统意义上表示时域向频域的转化关系，但在多项式中则表示原项乘以了逆矩阵且扩大了n倍。\textcolor{red}{多项式乘法中，如果只是单纯的相乘，应采用$e^{{2\pi i k}/n}$。}
+编写程序时注意($e^{\theta i}=cos(\theta)+isin(\theta)$)：对于$\omega_n^k=e^{- i \frac{2 \pi k}{n}}$，在传统意义上表示时域向频域的转化关系，但在多项式中则表示原项乘以了逆矩阵且扩大了n倍。\textcolor{red}{多项式乘法中，如果只是单纯的相乘，应采用$\omega_n^k=e^{ i \frac{2 \pi k}{n}}$。}
 
 \subsubsection{FFT加速DFT}
 
@@ -576,22 +572,22 @@ $y_k=\sum_{j = 0}^{n-1} a_jx_k^j = \sum_{j = 0}^{n-1} a_j(\omega_n^k)^j$\qquad k
 \begin{itemize}
     \item 翻转多项式所有的系数$a_i$，变化为需要的排列顺序；
     \item \textcolor{red}{以a的次序为处理顺序；}
-    \item 进行主循环，记step，从1开始每次自身乘2递增直到n-1；
+    \item 进行主循环，记step，从1开始每次自身乘2递增直到n/2-1；
     
     (记step个系数的H+xG的值为大单元，则step表示分治下各部分系数数量为step的情况(不管行))
     
-    \item 计算当前step下的$\omega_n^1=e^{{2\pi}/n i}$；\textcolor{red}{(由于因为这是逆操作，step始终是只为原来一半的，因此利用当前的H+xG求解新H或G时，在x中需要将step乘2，即$e^{\pi /n i}$)}
+    \item 计算当前step下的$\omega_n^1=e^{i \frac{2 \pi}{n}}$；\textcolor{red}{(由于因为这是逆操作，step始终是只为原来一半的即表示m，因此利用当前的H+xG求解新H或G时，在x中需要将step乘2，即$n=e^{i \frac{\pi}{n}}$)}
     \item 进行中循环，记j，从0开始每次增加2倍的step直到n-1；\textcolor{red}{(将向量a按当前step大小全分割(总计n/step个)，每一次循环处理两个大单元(序号间隔step)，最终得到全部更新的a向量)}
     
-    (j表示当前处理的a向量范围$[j,j+2step)$))
+    (j表示当前处理的a向量范围，每一个中循环内$[j,j+2step)$)
 
-    可以视为对单行方程的分割。随step增加j取值不断减少。当step=n/2时，不分割，对应的$a_j$即j行的计算值。
+    \textcolor{red}{可以视为对单行方程的分割}。随step增加j取值不断减少。当step=n/2时，不分割，对应的$a_j$即j行的计算值。
 
     \item 进行小循环，记k，从j开始+1增加step个数为止；\textcolor{red}{(利用之前step下计算的上一轮的a向量值，来得到可求的每一行方程内对应传入的step位置的G+xH的值，即更新一部分a向量(2step个))}
     
     (k即表示a向量的序号，每次小循环会更新j即2step的部分a向量，直到全部更新完成)\textcolor{red}{(在第一次传入j中表示行的序号，从0到step；而在之后传入的j下，a向量的序号并不对应于列，需要减去之前的序号(即$k-j$或$k-2*step*l$才表示列))}
 
-    可以视为单方程内分割下的方程间分割的分别计算。随step增加k取值不断增加，当step=n/2时，计算量最大，恰好为全部的a数。
+    \textcolor{red}{可以视为单方程内分割下的方程间分割的分别计算}。随step增加k取值不断增加，当step=n/2时，计算量最大，恰好为全部的a数。
 
     \item 注意：传入的a矩阵为按顺序排列的系数向量，由于采用了重复赋值更新，在一轮大循环后，a的意义就已经发生变化了，a向量按一定的规律在不同的step下排列，但最后会表示为每一行的累加值。
     \item 程序：
