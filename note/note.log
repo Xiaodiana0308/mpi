@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021/W32TeX) (preloaded format=xelatex 2022.3.2)  24 MAY 2022 13:14
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2021/W32TeX) (preloaded format=xelatex 2022.3.2)  25 MAY 2022 01:04
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -548,7 +548,7 @@ Overfull \hbox (11.53516pt too wide) in paragraph at lines 1224--1225
  []
 
 [36] [37] [38] [39] [40] [41] [42]
-Overfull \hbox (11.53516pt too wide) in paragraph at lines 1480--1481
+Overfull \hbox (11.53516pt too wide) in paragraph at lines 1478--1479
 [] \TU/lmr/m/n/10.53937 int source,//[\TU/FandolSong-Regular(0)/m/n/10.53937 传 入\TU/lmr/m/n/10.53937 ] \TU/FandolSong-Regular(0)/m/n/10.53937 指 定 来 源 的 进 程 编 号，|  若 为 \TU/lmr/m/n/10.53937 MPI_ANY_SOURCE
  []
 
@@ -558,29 +558,29 @@ Overfull \hbox (34.03668pt too wide) in paragraph at lines 1584--1585
  []
 
 [45] [46] [47] [48]
-Overfull \hbox (18.93561pt too wide) in paragraph at lines 1740--1741
+Overfull \hbox (18.93561pt too wide) in paragraph at lines 1741--1742
 \TU/FandolSong-Regular(0)/m/n/10.53937 为 \TU/lmr/m/n/10.53937 array_of_blocklength[i] \TU/FandolSong-Regular(0)/m/n/10.53937 个，|  第 \TU/lmr/m/n/10.53937 i \TU/FandolSong-Regular(0)/m/n/10.53937 个 块 间 距 为 \TU/lmr/m/n/10.53937 array_of_displacements[i][]\TU/FandolSong-Regular(0)/m/n/10.53937 。| 
  []
 
-[49] [50] [51] [52] [53] [54] [55]
-Overfull \hbox (8.40987pt too wide) in paragraph at lines 2035--2036
+[49] [50] [51] [52] [53] [54] [55] [56]
+Overfull \hbox (8.40987pt too wide) in paragraph at lines 2037--2038
 \TU/FandolSong-Regular(0)/m/n/10.53937 之 间 的 不 同 数 据 类 型 映 射 仍 然 是 允 许 的。|  而 相 似 函 数 \TU/lmr/m/n/10.53937 MPI_Scatterv
  []
 
-[56] [57] [58] [59] [60]
+[57] [58] [59] [60]
 File: 8-1.png Graphic file (type bmp)
 <8-1.png>
  [61] [62] [63] [64] [65] [66] [67] [68] [69] [70] [71] (./note.aux)
 Package rerunfilecheck Info: File `note.out' has not changed.
-(rerunfilecheck)             Checksum: 17F9A997D27046D722821539BBAF2714;17258.
+(rerunfilecheck)             Checksum: E6D097556E397ECA4668DD53C0859F8C;17253.
  ) 
 Here is how much of TeX's memory you used:
  14697 strings out of 478866
  319389 string characters out of 5862826
- 664349 words of memory out of 5000000
+ 664344 words of memory out of 5000000
  34327 multiletter control sequences out of 15000+600000
  411474 words of font info for 83 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
- 101i,10n,104p,748b,493s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 101i,10n,104p,748b,485s stack positions out of 5000i,500n,10000p,200000b,80000s
 
 Output written on note.pdf (71 pages).
